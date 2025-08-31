@@ -64,7 +64,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	// .............................................................................................................
 
 	// ............................. Создание динамической карточки .............................................................................
-	//  ...........  отправка сайта на сервер !!!!!!!!   
+	//  ...........  отправка сайта на сервер !!!!!!!!  
+	
+	
+	
+	
+	// https://upload.wikimedia.org/wikipedia/commons/4/44/T-shirt_icon.png образец картинки
 
 	// =======================================
 	// Находим форму и контейнер
@@ -143,6 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="info--admin">
         <div class="admin--delite"><button class="del">Удалить товар</button></div>
         <div class="admin--status"><button class="stat">Статус</button></div>
+		<div class="admin--date" ><p> Размещено - ${card.date}</p></div>
       </div>
     </div>
   `;
@@ -234,13 +240,15 @@ window.addEventListener('DOMContentLoaded', () => {
 		const desc = form.desc.value.trim();
 		const availability = form.availability.value.trim();
 		const imgUrl = form.imgUrl.value.trim();
+		const date = form.date.value.trim(); // <-- добавили
+
 
 		if (!name || !price || !imgUrl) {
 			alert("Заполните обязательные поля: название, цену и ссылку на картинку.");
 			return;
 		}
 
-		const card = { name, price, desc, availability, imgSrc: imgUrl };
+		const card = { name, price, desc, availability, imgSrc: imgUrl, date };
 
 		// ===== LOCAL STORAGE VERSION =====
 		const allCards = getCards();

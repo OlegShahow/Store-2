@@ -1,0 +1,113 @@
+@import "./null.scss";
+
+@function toRem($value) {
+	$baseFontSize: 16;
+	@return ($value/$baseFontSize) * 1rem;
+}
+//.......................................................................................
+
+$maxWidth: 1920;
+
+@mixin adaptiveValue($property, $pcSize, $mobSize) {
+	$addSize: $pcSize - $mobSize;
+	$addMobSize: $addSize + $addSize * 0.7;
+
+	@media (min-width: toRem(1920)) {
+		#{$property}: #{$pcSize + px};
+	}
+
+	@media (max-width: toRem(1920)) {
+		@media (max-width: 1920px) {
+			#{$property}: calc(#{$mobSize + px} + #{$addMobSize} * ((100vw - 767px) / #{$maxWidth}));
+		}
+	}
+}
+// @include adaptiveValue ($property , $pcSize, $mobSize);
+
+//.......................................................................................
+
+//.......................................................................................
+
+[class*="__container"] {
+	max-width: 1680px;
+	padding: 0 20px;
+	margin: 0 auto;
+}
+
+// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+body {
+	background-color: rgb(85, 107, 47);
+	background-image: url("https://www.transparenttextures.com/patterns/basketball.png");
+	padding: toRem(50) 0;
+	width: 100vw;
+	height: 100vh;
+}
+
+.wrapper {
+	width: 100%;
+	text-align: center;
+	& h1 {
+		font-size: toRem(50);
+		color: white;
+		margin: toRem(50) 0;
+	}
+	& button {
+		padding: toRem(10);
+		font-size: toRem(24);
+	}
+	&__container {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		// border: 1px solid white;
+	}
+}
+
+.cart {
+	&__container {
+		display: flex;
+		flex-direction: column;
+		row-gap: toRem(30);
+		width: 100%;
+		// border: 1px solid rgb(138, 221, 13);
+	}
+}
+.cart-item {
+	& img {
+		width: toRem(100);
+	}
+}
+.cart-item-info {
+	position: relative;
+	background-color: rgba(0, 0, 255, 0.222);
+	box-shadow: 0px 0px 16px white;
+	width: 100%;
+	padding: toRem(10);
+
+	& button {
+		position: absolute;
+		bottom: 10%;
+		right: 5%;
+		padding: toRem(10);
+		font-size: toRem(16);
+		color: white;
+		background-color: red;
+	}
+}
+.cart-item-name,
+.cart-item-price,
+.cart-item-quantity,
+.cart-total {
+	font-size: toRem(26);
+	color: white;
+}
+.cart-item-price {
+}
+.cart-item-quantity {
+}
+.cart-total {
+}
+.checkout-btn {
+}
