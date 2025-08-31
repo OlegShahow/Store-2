@@ -25,7 +25,8 @@ const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
 const multer = require("multer");
-const fs = require("fs");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,36 +40,34 @@ const pool = new Pool({
 });
 
 // =======================================
-// Middleware
+// Настройка Cloudinary
 // =======================================
-app.use(express.json());
-app.use(express.static(path.join(__dirname)));
-app.use('/uploadsfoto', express.static(path.join(__dirname, 'uploadsfoto')));
+cloudinary.config({
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // укажи свои переменные в Render
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // =======================================
-// Создание папки для фото, если нет
+// Настройка Multer + Cloudinary
 // =======================================
-const uploadDir = path.join(__dirname, 'uploadsfoto');
-if (!fs.existsSync(uploadDir)) {
-	fs.mkdirSync(uploadDir);
-}
-
-// =======================================
-// Настройка Multer для загрузки фото
-// =======================================
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'uploadsfoto');
-	},
-	filename: function (req, file, cb) {
-		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-		cb(null, uniqueSuffix + path.extname(file.originalname));
+const storage = new CloudinaryStorage({
+	cloudinary: cloudinary,
+	params: {
+		folder: "my-online-store", // все фото будут в этой папке на Cloudinary
+		allowed_formats: ["jpg", "jpeg", "png", "gif"],
 	},
 });
 const upload = multer({ storage });
 
 // =======================================
-// Создание таблицы cards, если нет
+// Middleware
+// =======================================
+app.use(express.json()); // для работы с JSON
+app.use(express.static(path.join(__dirname))); // отдаём все файлы проекта
+
+// =======================================
+// Создание таблицы cards, если её нет
 // =======================================
 async function createTableIfNotExists() {
 	try {
@@ -124,12 +123,14 @@ app.post("/api/cards", async (req, res) => {
 });
 
 // =======================================
-// API для загрузки фото
+// API для загрузки фото на Cloudinary
 // =======================================
 app.post("/api/upload", upload.single("photo"), (req, res) => {
-	if (!req.file) return res.status(400).json({ error: "Файл не загружен" });
-	// Возвращаем путь к файлу для использования в imgSrc
-	res.json({ path: `/uploadsfoto/${req.file.filename}` });
+	if (!req.file || !req.file.path) {
+		return res.status(400).json({ error: "Файл не загружен" });
+	}
+	// Возвращаем URL изображения с Cloudinary
+	res.json({ path: req.file.path });
 });
 
 // =======================================
@@ -139,3 +140,10 @@ app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });
 
+
+// Обратите внимание:
+// Cloudinary требует регистрации и использования cloud_name, api_key, api_secret, которые можно добавить как Environment Variables в Render.
+// Все загруженные изображения теперь будут храниться в облаке Cloudinary, URL сразу возвращается и сохраняется в базе.
+// Локальная папка uploadsfoto больше не нужна.
+// На клиентском скрипте(main.js) нужно отправлять форму через FormData на / api / upload, как мы делали раньше.
+// Если хочешь, могу переписать твой клиентский JS сразу под Cloudinary, чтобы картинки реально сохранялись и отображались после перезагрузки.

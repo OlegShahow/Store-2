@@ -69,8 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
-	// https://upload.wikimedia.org/wikipedia/commons/4/44/T-shirt_icon.png образец картинки
-
+	// Отлично, понял задачу.Ты хочешь полный, рабочий frontend - скрипт с учётом Cloudinary.Я беру твой старый код и переписываю его так, чтобы он работал с сервером, где картинки хранятся в Cloudinary, + оставлю все твои и новые комментарии.
 
 
 
@@ -85,6 +84,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	// =======================================
 
 	// ===== SERVER READY VERSION =====
+	// Функция для получения всех карточек с сервера
 	async function getCards() {
 		try {
 			const response = await fetch("/api/cards");
@@ -96,6 +96,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
+	// Функция для сохранения карточек на сервер
 	async function saveCards(cards) {
 		try {
 			await fetch("/api/cards", {
@@ -115,6 +116,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const newCard = document.createElement("div");
 		newCard.classList.add("item--card");
 
+		// Вёрстка карточки
 		newCard.innerHTML = `
     <div class="item--info">
       <div class="info--public">
@@ -143,7 +145,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		cardsContainer.appendChild(newCard);
 
 		// =======================================
-		// Кнопка "О товаре"
+		// Кнопка "О товаре" (скрыть/показать описание)
 		// =======================================
 		const abButton = newCard.querySelector(".ab");
 		const description = newCard.querySelector(".description");
@@ -163,7 +165,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 
 		// =======================================
-		// Кнопка "Статус"
+		// Кнопка "Статус" (меняем доступность)
 		// =======================================
 		const statButton = newCard.querySelector(".stat");
 		const ava = newCard.querySelector(".item--availability");
@@ -201,6 +203,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const file = form.photo.files[0]; // input type="file"
 		const date = form.date.value.trim();
 
+		// Проверка обязательных полей
 		if (!name || !price || !file) {
 			alert("Заполните обязательные поля: название, цену и выберите фото.");
 			return;
@@ -208,6 +211,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		// =======================================
 		// Загружаем фото на сервер через /api/upload
+		// Сервер сам загрузит его в Cloudinary и вернёт URL
 		// =======================================
 		const formData = new FormData();
 		formData.append("photo", file);
@@ -219,15 +223,22 @@ window.addEventListener('DOMContentLoaded', () => {
 				body: formData,
 			});
 			const data = await uploadRes.json();
-			imgSrc = data.path; // путь к файлу на сервере
+
+			if (!uploadRes.ok || !data.url) {
+				throw new Error(data.error || "Ошибка при загрузке фото");
+			}
+
+			imgSrc = data.url; // <-- теперь Cloudinary URL
 		} catch (err) {
 			console.error("Ошибка при загрузке фото:", err);
 			alert("Не удалось загрузить фото");
 			return;
 		}
 
+		// Создаём карточку
 		const card = { name, price, description: desc, availability, imgSrc, date };
 
+		// Сохраняем карточку и сразу рендерим
 		let allCards = await getCards();
 		allCards.push(card);
 		await saveCards(allCards);
