@@ -70,7 +70,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	
 	
 	// https://upload.wikimedia.org/wikipedia/commons/4/44/T-shirt_icon.png образец картинки
-
 	// =======================================
 	// Находим форму и контейнер
 	// =======================================
@@ -82,44 +81,44 @@ window.addEventListener('DOMContentLoaded', () => {
 	// =======================================
 
 	// ===== LOCAL STORAGE VERSION (работает сейчас) =====
-	let cards = JSON.parse(localStorage.getItem("cards")) || [];
-
-	function getCards() {
-		// === Возвращает текущий массив карточек (локально) ===
-		return cards;
-	}
-
-	function saveCards(updatedCards) {
-		// === Обновляем массив и localStorage ===
-		cards = updatedCards;
-		localStorage.setItem("cards", JSON.stringify(cards));
-	}
-
-	// ===== SERVER READY VERSION (раскомментировать для сервера) =====
 	/*
-	async function getCards() {
-	  try {
-		const response = await fetch("/api/cards");
-		if (!response.ok) throw new Error("Ошибка при получении карточек");
-		return await response.json();
-	  } catch (err) {
-		console.error(err);
-		return [];
-	  }
+	let cards = JSON.parse(localStorage.getItem("cards")) || [];
+	
+	function getCards() {
+	  // === Возвращает текущий массив карточек (локально) ===
+	  return cards;
 	}
 	
-	async function saveCards(cards) {
-	  try {
-		await fetch("/api/cards", {
-		  method: "POST",
-		  headers: { "Content-Type": "application/json" },
-		  body: JSON.stringify(cards),
-		});
-	  } catch (err) {
-		console.error(err);
-	  }
+	function saveCards(updatedCards) {
+	  // === Обновляем массив и localStorage ===
+	  cards = updatedCards;
+	  localStorage.setItem("cards", JSON.stringify(cards));
 	}
 	*/
+
+	// ===== SERVER READY VERSION =====
+	async function getCards() {
+		try {
+			const response = await fetch("/api/cards");
+			if (!response.ok) throw new Error("Ошибка при получении карточек");
+			return await response.json();
+		} catch (err) {
+			console.error(err);
+			return [];
+		}
+	}
+
+	async function saveCards(cards) {
+		try {
+			await fetch("/api/cards", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(cards),
+			});
+		} catch (err) {
+			console.error(err);
+		}
+	}
 
 	// =======================================
 	// Функция рендера карточки
@@ -148,7 +147,7 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="info--admin">
         <div class="admin--delite"><button class="del">Удалить товар</button></div>
         <div class="admin--status"><button class="stat">Статус</button></div>
-		<div class="admin--date" ><p> Размещено - ${card.date}</p></div>
+        <div class="admin--date" ><p> Размещено - ${card.date}</p></div>
       </div>
     </div>
   `;
@@ -168,25 +167,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		// Удаление карточки
 		// =======================================
 		const delButton = newCard.querySelector(".del");
-		delButton.addEventListener("click", () => {
+		delButton.addEventListener("click", async () => {
 			newCard.remove();
 
-			// ===== LOCAL STORAGE VERSION =====
-			const updatedCards = getCards().filter(
-				c => !(c.name === card.name && c.price === card.price)
-			);
-			saveCards(updatedCards);
-
 			// ===== SERVER READY VERSION =====
-			/*
-			(async () => {
-			  let updatedCards = await getCards();
-			  updatedCards = updatedCards.filter(
-				c => !(c.name === card.name && c.price === card.price)
-			  );
-			  await saveCards(updatedCards);
-			})();
-			*/
+			let updatedCards = await getCards();
+			updatedCards = updatedCards.filter(c => !(c.name === card.name && c.price === card.price));
+			await saveCards(updatedCards);
 		});
 
 		// =======================================
@@ -194,45 +181,31 @@ window.addEventListener('DOMContentLoaded', () => {
 		// =======================================
 		const statButton = newCard.querySelector(".stat");
 		const ava = newCard.querySelector(".item--availability");
-		statButton.addEventListener("click", () => {
+		statButton.addEventListener("click", async () => {
 			const newStatus = ava.textContent === "В наличии" ? "В дороге" : "В наличии";
 			ava.textContent = newStatus;
 
-			// ===== LOCAL STORAGE VERSION =====
-			let updatedCards = getCards();
-			const cardIndex = updatedCards.findIndex(
-				c => c.name === card.name && c.price === card.price
-			);
+			let updatedCards = await getCards();
+			const cardIndex = updatedCards.findIndex(c => c.name === card.name && c.price === card.price);
 			if (cardIndex !== -1) {
 				updatedCards[cardIndex].availability = newStatus;
-				saveCards(updatedCards);
-			}
-
-			// ===== SERVER READY VERSION =====
-			/*
-			(async () => {
-			  let updatedCards = await getCards();
-			  const cardIndex = updatedCards.findIndex(
-				c => c.name === card.name && c.price === card.price
-			  );
-			  if (cardIndex !== -1) {
-				updatedCards[cardIndex].availability = newStatus;
 				await saveCards(updatedCards);
-			  }
-			})();
-			*/
+			}
 		});
 	}
 
 	// =======================================
 	// Загрузка карточек при старте
 	// =======================================
-	getCards().forEach(renderCard);
+	(async () => {
+		const cards = await getCards();
+		cards.forEach(renderCard);
+	})();
 
 	// =======================================
 	// Добавление новой карточки
 	// =======================================
-	form.addEventListener("submit", (event) => {
+	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
 		const name = form.name.value.trim();
@@ -240,8 +213,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		const desc = form.desc.value.trim();
 		const availability = form.availability.value.trim();
 		const imgUrl = form.imgUrl.value.trim();
-		const date = form.date.value.trim(); // <-- добавили
-
+		const date = form.date.value.trim();
 
 		if (!name || !price || !imgUrl) {
 			alert("Заполните обязательные поля: название, цену и ссылку на картинку.");
@@ -250,21 +222,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		const card = { name, price, desc, availability, imgSrc: imgUrl, date };
 
-		// ===== LOCAL STORAGE VERSION =====
-		const allCards = getCards();
-		allCards.push(card);
-		saveCards(allCards);
-		renderCard(card);
-
 		// ===== SERVER READY VERSION =====
-		/*
-		(async () => {
-		  let allCards = await getCards();
-		  allCards.push(card);
-		  await saveCards(allCards);
-		  renderCard(card);
-		})();
-		*/
+		let allCards = await getCards();
+		allCards.push(card);
+		await saveCards(allCards);
+		renderCard(card);
 
 		form.reset();
 	});
@@ -272,6 +234,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
+// Что изменилось:
+// Закомментирован код localStorage(можно оставить для локального теста).
+// Раскомментированы блоки SERVER READY VERSION, чтобы все действия выполнялись через сервер.
+// Все комментарии сохранены, чтобы не потерять описание логики.
 
 
 	// .................................................................................................................
