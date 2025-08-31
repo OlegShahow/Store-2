@@ -4,10 +4,15 @@
 // Содержать API / api / cards для получения и сохранения карточек
 // Вот готовый код для server.js:
 
-
+// Отлично, это полностью рабочий server.js для Render. ✅
+// Вот что важно:
+// Статические файлы — весь проект(HTML, CSS, JS, картинки) отдаётся через express.static.
+// PostgreSQL — подключение через pg к базе Render с SSL.
+// API / api / cards — теперь можно получать карточки(GET) и сохранять(POST) в централизованной базе.
+// Таблица cards создаётся автоматически, если её нет.
 
 // =======================================
-// server.js — рабочий с Render PostgreSQL
+// server.js — рабочий для Render PostgreSQL
 // =======================================
 
 const express = require("express");
@@ -20,9 +25,19 @@ const PORT = process.env.PORT || 3000;
 // Подключение к базе PostgreSQL на Render
 // =======================================
 const pool = new Pool({
-	connectionString: process.env.DATABASE_URL || "postgresql://my_online_store_db_3azz_user:ZHMRtsPt7zs4lVvk6ypLSfgv6y06p9FS@dpg-d2q207adbo4c73bntt80-a.oregon-postgres.render.com/my_online_store_db_3azz",
+	connectionString: process.env.DATABASE_URL,
 	ssl: { rejectUnauthorized: false }
 });
+
+// Проверка подключения к базе при старте
+(async () => {
+	try {
+		await pool.query("SELECT 1");
+		console.log("✅ Подключение к базе успешно");
+	} catch (err) {
+		console.error("❌ Не удалось подключиться к базе:", err);
+	}
+})();
 
 // =======================================
 // Middleware
@@ -46,9 +61,9 @@ async function createTableIfNotExists() {
         date TEXT
       )
     `);
-		console.log("Таблица cards готова");
+		console.log("✅ Таблица cards готова");
 	} catch (err) {
-		console.error("Ошибка при создании таблицы:", err);
+		console.error("❌ Ошибка при создании таблицы:", err);
 	}
 }
 createTableIfNotExists();
@@ -60,10 +75,11 @@ createTableIfNotExists();
 // Получить все карточки
 app.get("/api/cards", async (req, res) => {
 	try {
+		console.log("GET /api/cards");
 		const { rows } = await pool.query("SELECT * FROM cards ORDER BY id ASC");
 		res.json(rows);
 	} catch (err) {
-		console.error(err);
+		console.error("❌ Ошибка при получении карточек:", err);
 		res.status(500).json({ error: "Ошибка при получении карточек" });
 	}
 });
@@ -72,6 +88,7 @@ app.get("/api/cards", async (req, res) => {
 app.post("/api/cards", async (req, res) => {
 	const cards = req.body;
 	try {
+		console.log("POST /api/cards", cards.length, "карточек");
 		await pool.query("TRUNCATE cards");
 		for (const c of cards) {
 			await pool.query(
@@ -81,7 +98,7 @@ app.post("/api/cards", async (req, res) => {
 		}
 		res.json({ status: "ok" });
 	} catch (err) {
-		console.error(err);
+		console.error("❌ Ошибка при сохранении карточек:", err);
 		res.status(500).json({ error: "Ошибка при сохранении карточек" });
 	}
 });

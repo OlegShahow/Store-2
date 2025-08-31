@@ -70,6 +70,10 @@ window.addEventListener('DOMContentLoaded', () => {
 	
 	
 	// https://upload.wikimedia.org/wikipedia/commons/4/44/T-shirt_icon.png образец картинки
+	
+	
+	
+	
 	// =======================================
 	// Находим форму и контейнер
 	// =======================================
