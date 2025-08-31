@@ -24,6 +24,8 @@
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
+const multer = require("multer");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,17 +35,40 @@ const PORT = process.env.PORT || 3000;
 // =======================================
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
-	ssl: { rejectUnauthorized: false }
+	ssl: { rejectUnauthorized: false },
 });
 
 // =======================================
 // Middleware
 // =======================================
-app.use(express.json()); // для работы с JSON
-app.use(express.static(path.join(__dirname))); // отдаём все файлы проекта
+app.use(express.json());
+app.use(express.static(path.join(__dirname)));
+app.use('/uploadsfoto', express.static(path.join(__dirname, 'uploadsfoto')));
 
 // =======================================
-// Создание таблицы cards, если её нет
+// Создание папки для фото, если нет
+// =======================================
+const uploadDir = path.join(__dirname, 'uploadsfoto');
+if (!fs.existsSync(uploadDir)) {
+	fs.mkdirSync(uploadDir);
+}
+
+// =======================================
+// Настройка Multer для загрузки фото
+// =======================================
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, 'uploadsfoto');
+	},
+	filename: function (req, file, cb) {
+		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+		cb(null, uniqueSuffix + path.extname(file.originalname));
+	},
+});
+const upload = multer({ storage });
+
+// =======================================
+// Создание таблицы cards, если нет
 // =======================================
 async function createTableIfNotExists() {
 	try {
@@ -99,8 +124,18 @@ app.post("/api/cards", async (req, res) => {
 });
 
 // =======================================
+// API для загрузки фото
+// =======================================
+app.post("/api/upload", upload.single("photo"), (req, res) => {
+	if (!req.file) return res.status(400).json({ error: "Файл не загружен" });
+	// Возвращаем путь к файлу для использования в imgSrc
+	res.json({ path: `/uploadsfoto/${req.file.filename}` });
+});
+
+// =======================================
 // Запуск сервера
 // =======================================
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });
+

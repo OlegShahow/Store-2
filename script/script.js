@@ -84,22 +84,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	// Вспомогательные функции
 	// =======================================
 
-	// ===== LOCAL STORAGE VERSION (работает сейчас) =====
-	/*
-	let cards = JSON.parse(localStorage.getItem("cards")) || [];
-	
-	function getCards() {
-	  // === Возвращает текущий массив карточек (локально) ===
-	  return cards;
-	}
-	
-	function saveCards(updatedCards) {
-	  // === Обновляем массив и localStorage ===
-	  cards = updatedCards;
-	  localStorage.setItem("cards", JSON.stringify(cards));
-	}
-	*/
-
 	// ===== SERVER READY VERSION =====
 	async function getCards() {
 		try {
@@ -139,8 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="item--foto adds"><img src="${card.imgSrc}" alt="${card.name}"></div>
         <div class="item--about adds">
           <button class="ab">О товаре</button>
-         <div class="description"><p>${card.description}</p></div>
-
+          <div class="description"><p>${card.description}</p></div>
         </div>
         <div class="item--availability adds">${card.availability}</div>
         <div class="item--korzina">
@@ -152,7 +135,7 @@ window.addEventListener('DOMContentLoaded', () => {
       <div class="info--admin">
         <div class="admin--delite"><button class="del">Удалить товар</button></div>
         <div class="admin--status"><button class="stat">Статус</button></div>
-        <div class="admin--date" ><p> Размещено - ${card.date}</p></div>
+        <div class="admin--date"><p>Размещено - ${card.date}</p></div>
       </div>
     </div>
   `;
@@ -174,8 +157,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		const delButton = newCard.querySelector(".del");
 		delButton.addEventListener("click", async () => {
 			newCard.remove();
-
-			// ===== SERVER READY VERSION =====
 			let updatedCards = await getCards();
 			updatedCards = updatedCards.filter(c => !(c.name === card.name && c.price === card.price));
 			await saveCards(updatedCards);
@@ -208,7 +189,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	})();
 
 	// =======================================
-	// Добавление новой карточки
+	// Добавление новой карточки с поддержкой загрузки фото
 	// =======================================
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
@@ -217,18 +198,36 @@ window.addEventListener('DOMContentLoaded', () => {
 		const price = form.price.value.trim();
 		const desc = form.desc.value.trim();
 		const availability = form.availability.value.trim();
-		const imgUrl = form.imgUrl.value.trim();
+		const file = form.photo.files[0]; // input type="file"
 		const date = form.date.value.trim();
 
-		if (!name || !price || !imgUrl) {
-			alert("Заполните обязательные поля: название, цену и ссылку на картинку.");
+		if (!name || !price || !file) {
+			alert("Заполните обязательные поля: название, цену и выберите фото.");
 			return;
 		}
 
-		const card = { name, price, description: desc, availability, imgSrc: imgUrl, date };
+		// =======================================
+		// Загружаем фото на сервер через /api/upload
+		// =======================================
+		const formData = new FormData();
+		formData.append("photo", file);
 
+		let imgSrc = "";
+		try {
+			const uploadRes = await fetch("/api/upload", {
+				method: "POST",
+				body: formData,
+			});
+			const data = await uploadRes.json();
+			imgSrc = data.path; // путь к файлу на сервере
+		} catch (err) {
+			console.error("Ошибка при загрузке фото:", err);
+			alert("Не удалось загрузить фото");
+			return;
+		}
 
-		// ===== SERVER READY VERSION =====
+		const card = { name, price, description: desc, availability, imgSrc, date };
+
 		let allCards = await getCards();
 		allCards.push(card);
 		await saveCards(allCards);
@@ -236,7 +235,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		form.reset();
 	});
-
 
 
 
