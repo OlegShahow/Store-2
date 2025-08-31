@@ -20,7 +20,9 @@
 // =======================================
 // server.js — полностью рабочий для Render
 // =======================================
-
+// =======================================
+// Импорты
+// =======================================
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
@@ -32,18 +34,21 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =======================================
-// Подключение к базе PostgreSQL на Render
+// Подключение к базе PostgreSQL (Render)
 // =======================================
+// DATABASE_URL хранится в Environment Variables на Render
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
-	ssl: { rejectUnauthorized: false },
+	ssl: { rejectUnauthorized: false }, // обязательно для Render
 });
 
 // =======================================
 // Настройка Cloudinary
 // =======================================
+// CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+// тоже должны быть добавлены в Render → Environment Variables
 cloudinary.config({
-	cloud_name: process.env.CLOUDINARY_CLOUD_NAME, // укажи свои переменные в Render
+	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
 	api_key: process.env.CLOUDINARY_API_KEY,
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
@@ -51,11 +56,13 @@ cloudinary.config({
 // =======================================
 // Настройка Multer + Cloudinary
 // =======================================
+// Multer-storage-cloudinary автоматически отправляет файл в облако
+// и возвращает ссылку
 const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
-		folder: "my-online-store", // все фото будут в этой папке на Cloudinary
-		allowed_formats: ["jpg", "jpeg", "png", "gif"],
+		folder: "my-online-store", // папка в Cloudinary
+		allowed_formats: ["jpg", "jpeg", "png", "gif"], // какие файлы разрешены
 	},
 });
 const upload = multer({ storage });
@@ -63,12 +70,14 @@ const upload = multer({ storage });
 // =======================================
 // Middleware
 // =======================================
-app.use(express.json()); // для работы с JSON
-app.use(express.static(path.join(__dirname))); // отдаём все файлы проекта
+// Чтобы Express умел читать JSON и отдавать статику (HTML/JS/CSS)
+app.use(express.json());
+app.use(express.static(path.join(__dirname)));
 
 // =======================================
-// Создание таблицы cards, если её нет
+// Создание таблицы cards (если её нет)
 // =======================================
+// Таблица хранит все карточки товаров
 async function createTableIfNotExists() {
 	try {
 		await pool.query(`
@@ -104,17 +113,21 @@ app.get("/api/cards", async (req, res) => {
 	}
 });
 
-// Сохранить карточки (перезаписать)
+// Сохранить карточки (перезаписать все)
 app.post("/api/cards", async (req, res) => {
 	const cards = req.body;
 	try {
+		// очищаем таблицу
 		await pool.query("TRUNCATE cards");
+
+		// вставляем новые карточки
 		for (const c of cards) {
 			await pool.query(
 				"INSERT INTO cards (name, price, description, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
 				[c.name, c.price, c.description, c.availability, c.imgSrc, c.date]
 			);
 		}
+
 		res.json({ status: "ok" });
 	} catch (err) {
 		console.error("❌ Ошибка при сохранении карточек:", err);
@@ -125,11 +138,13 @@ app.post("/api/cards", async (req, res) => {
 // =======================================
 // API для загрузки фото на Cloudinary
 // =======================================
+// Когда фронт отправляет POST /api/upload с файлом,
+// multer-storage-cloudinary сразу загружает его в облако
 app.post("/api/upload", upload.single("photo"), (req, res) => {
 	if (!req.file || !req.file.path) {
 		return res.status(400).json({ error: "Файл не загружен" });
 	}
-	// Возвращаем URL изображения с Cloudinary
+	// Возвращаем ссылку на картинку
 	res.json({ path: req.file.path });
 });
 
@@ -137,7 +152,7 @@ app.post("/api/upload", upload.single("photo"), (req, res) => {
 // Запуск сервера
 // =======================================
 app.listen(PORT, () => {
-	console.log(`Server is running on port ${PORT}`);
+	console.log(`🚀 Server is running on port ${PORT}`);
 });
 
 
