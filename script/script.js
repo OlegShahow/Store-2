@@ -65,15 +65,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// ............................. Создание динамической карточки .............................................................................
 	//  ...........  отправка сайта на сервер !!!!!!!!  
-	
-	
-	
-	
+
+
+
+
 	// https://upload.wikimedia.org/wikipedia/commons/4/44/T-shirt_icon.png образец картинки
-	
-	
-	
-	
+
+
+
+
 	// =======================================
 	// Находим форму и контейнер
 	// =======================================
@@ -139,7 +139,8 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="item--foto adds"><img src="${card.imgSrc}" alt="${card.name}"></div>
         <div class="item--about adds">
           <button class="ab">О товаре</button>
-          <div class="description"><p>${card.desc}</p></div>
+         <div class="description"><p>${card.description}</p></div>
+
         </div>
         <div class="item--availability adds">${card.availability}</div>
         <div class="item--korzina">
@@ -224,7 +225,8 @@ window.addEventListener('DOMContentLoaded', () => {
 			return;
 		}
 
-		const card = { name, price, desc, availability, imgSrc: imgUrl, date };
+		const card = { name, price, description: desc, availability, imgSrc: imgUrl, date };
+
 
 		// ===== SERVER READY VERSION =====
 		let allCards = await getCards();
@@ -238,10 +240,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
-// Что изменилось:
-// Закомментирован код localStorage(можно оставить для локального теста).
-// Раскомментированы блоки SERVER READY VERSION, чтобы все действия выполнялись через сервер.
-// Все комментарии сохранены, чтобы не потерять описание логики.
+	// Что изменилось:
+	// Закомментирован код localStorage(можно оставить для локального теста).
+	// Раскомментированы блоки SERVER READY VERSION, чтобы все действия выполнялись через сервер.
+	// Все комментарии сохранены, чтобы не потерять описание логики.
 
 
 	// .................................................................................................................

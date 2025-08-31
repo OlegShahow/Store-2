@@ -15,9 +15,16 @@
 // server.js — рабочий для Render PostgreSQL
 // =======================================
 
+
+
+// =======================================
+// server.js — полностью рабочий для Render
+// =======================================
+
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -28,16 +35,6 @@ const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
 	ssl: { rejectUnauthorized: false }
 });
-
-// Проверка подключения к базе при старте
-(async () => {
-	try {
-		await pool.query("SELECT 1");
-		console.log("✅ Подключение к базе успешно");
-	} catch (err) {
-		console.error("❌ Не удалось подключиться к базе:", err);
-	}
-})();
 
 // =======================================
 // Middleware
@@ -55,7 +52,7 @@ async function createTableIfNotExists() {
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         price TEXT NOT NULL,
-        desc TEXT,
+        description TEXT,
         availability TEXT,
         imgSrc TEXT,
         date TEXT
@@ -75,7 +72,6 @@ createTableIfNotExists();
 // Получить все карточки
 app.get("/api/cards", async (req, res) => {
 	try {
-		console.log("GET /api/cards");
 		const { rows } = await pool.query("SELECT * FROM cards ORDER BY id ASC");
 		res.json(rows);
 	} catch (err) {
@@ -88,12 +84,11 @@ app.get("/api/cards", async (req, res) => {
 app.post("/api/cards", async (req, res) => {
 	const cards = req.body;
 	try {
-		console.log("POST /api/cards", cards.length, "карточек");
 		await pool.query("TRUNCATE cards");
 		for (const c of cards) {
 			await pool.query(
-				"INSERT INTO cards (name, price, desc, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
-				[c.name, c.price, c.desc, c.availability, c.imgSrc, c.date]
+				"INSERT INTO cards (name, price, description, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
+				[c.name, c.price, c.description, c.availability, c.imgSrc, c.date]
 			);
 		}
 		res.json({ status: "ok" });
