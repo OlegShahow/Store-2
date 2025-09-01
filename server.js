@@ -145,7 +145,8 @@ app.post("/api/upload", upload.single("photo"), (req, res) => {
 		return res.status(400).json({ error: "Файл не загружен" });
 	}
 	// Возвращаем ссылку на картинку
-	res.json({ path: req.file.path });
+
+	res.json({ url: req.file.path }); // теперь фронт будет получать поле url
 });
 
 // =======================================
