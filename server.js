@@ -23,6 +23,8 @@
 // =======================================
 // Импорты
 // =======================================
+
+
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
@@ -141,12 +143,17 @@ app.post("/api/cards", async (req, res) => {
 // Когда фронт отправляет POST /api/upload с файлом,
 // multer-storage-cloudinary сразу загружает его в облако
 app.post("/api/upload", upload.single("photo"), (req, res) => {
-	if (!req.file || !req.file.path) {
-		return res.status(400).json({ error: "Файл не загружен" });
+	try {
+		if (!req.file || !req.file.path) {
+			console.error("❌ Файл не загружен, req.file:", req.file);
+			return res.status(400).json({ error: "Файл не загружен", file: req.file });
+		}
+		// Возвращаем ссылку на картинку
+		res.json({ url: req.file.path }); // теперь фронт будет получать поле url
+	} catch (err) {
+		console.error("❌ Ошибка загрузки файла:", err);
+		res.status(500).json({ error: "Ошибка при загрузке фото", details: err });
 	}
-	// Возвращаем ссылку на картинку
-
-	res.json({ url: req.file.path }); // теперь фронт будет получать поле url
 });
 
 // =======================================
