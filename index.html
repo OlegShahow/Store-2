@@ -121,64 +121,67 @@
 			</div>
 
 
-
 			<div class="form__block">
+				<!-- =======================================
+         Форма добавления новой карточки
+         ======================================= -->
 				<form id="add-card-form" class="footer__add--box">
 					<div class="form__block--body">
+
+						<!-- Название товара -->
 						<div class="add--name adds">
 							<label for="name">Введите название товара</label>
 							<input type="text" id="name" name="name" required>
 						</div>
 
+						<!-- Цена товара -->
 						<div class="add--prize adds">
 							<label for="price">Введите стоимость товара</label>
 							<input type="number" id="price" name="price" required>
 						</div>
 
-						<!-- <div class="add--foto adds">
-								<label>Выберите фото товара</label>
-								<input type="file" name="img" accept="image/*" required>
-							</div> -->
-
-
-						<!-- Поле для добавления фото с компьютера -->
+						<!-- Фото товара -->
 						<div class="add--foto adds">
 							<label for="photo">Выберите изображение</label>
-							<input type="file" id="photo" name="photo" accept="image/*">
+							<input type="file" id="photo" name="photo" accept="image/*" required>
 						</div>
 
-
-
-
+						<!-- Описание товара -->
 						<div class="add--about adds">
 							<label for="desc">Введите описание товара</label>
 							<textarea id="desc" name="desc" rows="3"></textarea>
 						</div>
 
+						<!-- Наличие товара -->
 						<div class="add--availability adds">
 							<label for="availability">Введите наличие</label>
 							<input type="text" id="availability" name="availability"
 								placeholder="В наличии / Нет в наличии">
 						</div>
-						<div class="add--data adds">
-							<label for="data">Дата размещения</label>
-							<input name="date" id="date" type="date" required>
 
+						<!-- Дата размещения -->
+						<div class="add--data adds">
+							<label for="date">Дата размещения</label>
+							<input name="date" id="date" type="date" required>
 						</div>
+
 					</div>
 
-
+					<!-- Кнопка отправки формы -->
 					<button class="adnbtn" type="submit">Добавить товар</button>
 				</form>
 
-
+				<!-- =======================================
+         Блок смены пароля (не связан с карточками)
+         ======================================= -->
 				<div class="change--password">
 					<label>Изменить текущий пароль на новый</label>
 					<input type="password">
-
 					<button class="changebtn" type="submit">ИЗМЕНИТЬ</button>
 				</div>
 			</div>
+
+
 	</div>
 
 

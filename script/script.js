@@ -88,7 +88,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	async function getCards() {
 		try {
 			const response = await fetch("/api/cards");
-			if (!response.ok) throw new Error("Ошибка при получении карточек с сервера");
+			if (!response.ok) throw new Error(`Ошибка при получении карточек: ${response.status}`);
 			return await response.json();
 		} catch (err) {
 			console.error("❌ getCards Error:", err);
@@ -104,7 +104,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(cards),
 			});
-			if (!response.ok) throw new Error("Ошибка при сохранении карточек на сервер");
+			if (!response.ok) {
+				const text = await response.text();
+				throw new Error(`Ошибка при сохранении карточек: ${text}`);
+			}
 		} catch (err) {
 			console.error("❌ saveCards Error:", err);
 		}
@@ -117,7 +120,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		const newCard = document.createElement("div");
 		newCard.classList.add("item--card");
 
-		// Вёрстка карточки
 		newCard.innerHTML = `
     <div class="item--info">
       <div class="info--public">
@@ -197,15 +199,13 @@ window.addEventListener('DOMContentLoaded', () => {
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
-		// Получаем значения из формы
 		const name = form.name.value.trim();
 		const price = form.price.value.trim();
 		const desc = form.desc.value.trim();
-		const availability = form.availability.value.trim() || "В наличии"; // по умолчанию
+		const availability = form.availability.value.trim() || "В наличии";
 		const file = form.photo.files[0];
 		const date = form.date.value.trim();
 
-		// Проверка обязательных полей
 		if (!name || !price || !file) {
 			alert("Заполните обязательные поля: название, цену и выберите фото.");
 			return;
@@ -224,7 +224,16 @@ window.addEventListener('DOMContentLoaded', () => {
 				method: "POST",
 				body: formData,
 			});
-			const data = await uploadRes.json();
+
+			// Проверяем, пришёл ли JSON
+			const text = await uploadRes.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (err) {
+				console.error("❌ Сервер вернул не JSON:", text);
+				throw new Error("Сервер вернул не JSON. Проверьте /api/upload на сервере");
+			}
 
 			if (!uploadRes.ok || !data.url) {
 				throw new Error(data.error || "Ошибка при загрузке фото на сервер");
@@ -251,7 +260,6 @@ window.addEventListener('DOMContentLoaded', () => {
 		await saveCards(allCards);
 		renderCard(card);
 
-		// Сбрасываем форму
 		form.reset();
 	});
 
