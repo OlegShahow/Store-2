@@ -74,7 +74,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 	// =======================================
-	// Находим форму и контейнер
+	// Находим форму и контейнер для карточек
 	// =======================================
 	const form = document.getElementById("add-card-form");
 	const cardsContainer = document.querySelector(".main__cards");
@@ -84,33 +84,34 @@ window.addEventListener('DOMContentLoaded', () => {
 	// =======================================
 
 	// ===== SERVER READY VERSION =====
-	// Функция для получения всех карточек с сервера
+	// Получение всех карточек с сервера
 	async function getCards() {
 		try {
 			const response = await fetch("/api/cards");
-			if (!response.ok) throw new Error("Ошибка при получении карточек");
+			if (!response.ok) throw new Error("Ошибка при получении карточек с сервера");
 			return await response.json();
 		} catch (err) {
-			console.error(err);
+			console.error("❌ getCards Error:", err);
 			return [];
 		}
 	}
 
-	// Функция для сохранения карточек на сервер
+	// Сохранение всех карточек на сервер
 	async function saveCards(cards) {
 		try {
-			await fetch("/api/cards", {
+			const response = await fetch("/api/cards", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(cards),
 			});
+			if (!response.ok) throw new Error("Ошибка при сохранении карточек на сервер");
 		} catch (err) {
-			console.error(err);
+			console.error("❌ saveCards Error:", err);
 		}
 	}
 
 	// =======================================
-	// Функция рендера карточки
+	// Функция рендера одной карточки
 	// =======================================
 	function renderCard(card) {
 		const newCard = document.createElement("div");
@@ -145,7 +146,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		cardsContainer.appendChild(newCard);
 
 		// =======================================
-		// Кнопка "О товаре" (скрыть/показать описание)
+		// Кнопка "О товаре" - скрыть/показать описание
 		// =======================================
 		const abButton = newCard.querySelector(".ab");
 		const description = newCard.querySelector(".description");
@@ -165,7 +166,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 
 		// =======================================
-		// Кнопка "Статус" (меняем доступность)
+		// Кнопка "Статус" - менять доступность
 		// =======================================
 		const statButton = newCard.querySelector(".stat");
 		const ava = newCard.querySelector(".item--availability");
@@ -183,7 +184,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// =======================================
-	// Загрузка карточек при старте
+	// Загрузка всех карточек при старте
 	// =======================================
 	(async () => {
 		const cards = await getCards();
@@ -191,16 +192,17 @@ window.addEventListener('DOMContentLoaded', () => {
 	})();
 
 	// =======================================
-	// Добавление новой карточки с поддержкой загрузки фото
+	// Добавление новой карточки с загрузкой фото
 	// =======================================
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
+		// Получаем значения из формы
 		const name = form.name.value.trim();
 		const price = form.price.value.trim();
 		const desc = form.desc.value.trim();
-		const availability = form.availability.value.trim();
-		const file = form.photo.files[0]; // input type="file"
+		const availability = form.availability.value.trim() || "В наличии"; // по умолчанию
+		const file = form.photo.files[0];
 		const date = form.date.value.trim();
 
 		// Проверка обязательных полей
@@ -210,14 +212,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 
 		// =======================================
-		// Загружаем фото на сервер через /api/upload
-		// Сервер сам загрузит его в Cloudinary и вернёт URL
+		// Загрузка фото на сервер через /api/upload
 		// =======================================
 		const formData = new FormData();
 		formData.append("photo", file);
 
 		let imgSrc = "";
 		try {
+			console.log("📌 Загружаем фото на сервер...");
 			const uploadRes = await fetch("/api/upload", {
 				method: "POST",
 				body: formData,
@@ -225,27 +227,34 @@ window.addEventListener('DOMContentLoaded', () => {
 			const data = await uploadRes.json();
 
 			if (!uploadRes.ok || !data.url) {
-				throw new Error(data.error || "Ошибка при загрузке фото");
+				throw new Error(data.error || "Ошибка при загрузке фото на сервер");
 			}
 
-			imgSrc = data.url; // <-- теперь Cloudinary URL
+			imgSrc = data.url;
+			console.log("✅ Фото успешно загружено, URL:", imgSrc);
 		} catch (err) {
-			console.error("Ошибка при загрузке фото:", err);
-			alert("Не удалось загрузить фото");
+			console.error("❌ Ошибка при загрузке фото:", err);
+			alert("Не удалось загрузить фото. Проверьте сервер и Cloudinary.");
 			return;
 		}
 
-		// Создаём карточку
+		// =======================================
+		// Создаем объект карточки
+		// =======================================
 		const card = { name, price, description: desc, availability, imgSrc, date };
 
-		// Сохраняем карточку и сразу рендерим
+		// =======================================
+		// Сохраняем карточку на сервер и рендерим
+		// =======================================
 		let allCards = await getCards();
 		allCards.push(card);
 		await saveCards(allCards);
 		renderCard(card);
 
+		// Сбрасываем форму
 		form.reset();
 	});
+
 
 
 

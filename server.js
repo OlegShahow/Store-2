@@ -44,11 +44,14 @@ const pool = new Pool({
 	ssl: { rejectUnauthorized: false }, // обязательно для Render
 });
 
+// Проверка подключения к базе
+pool.connect()
+	.then(() => console.log("✅ Подключение к базе PostgreSQL успешно"))
+	.catch(err => console.error("❌ Ошибка подключения к базе PostgreSQL:", err));
+
 // =======================================
 // Настройка Cloudinary
 // =======================================
-// CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
-// тоже должны быть добавлены в Render → Environment Variables
 cloudinary.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
 	api_key: process.env.CLOUDINARY_API_KEY,
@@ -58,13 +61,11 @@ cloudinary.config({
 // =======================================
 // Настройка Multer + Cloudinary
 // =======================================
-// Multer-storage-cloudinary автоматически отправляет файл в облако
-// и возвращает ссылку
 const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
 		folder: "my-online-store", // папка в Cloudinary
-		allowed_formats: ["jpg", "jpeg", "png", "gif"], // какие файлы разрешены
+		allowed_formats: ["jpg", "jpeg", "png", "gif"], // допустимые форматы
 	},
 });
 const upload = multer({ storage });
@@ -72,27 +73,25 @@ const upload = multer({ storage });
 // =======================================
 // Middleware
 // =======================================
-// Чтобы Express умел читать JSON и отдавать статику (HTML/JS/CSS)
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // =======================================
 // Создание таблицы cards (если её нет)
 // =======================================
-// Таблица хранит все карточки товаров
 async function createTableIfNotExists() {
 	try {
 		await pool.query(`
-      CREATE TABLE IF NOT EXISTS cards (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        price TEXT NOT NULL,
-        description TEXT,
-        availability TEXT,
-        imgSrc TEXT,
-        date TEXT
-      )
-    `);
+			CREATE TABLE IF NOT EXISTS cards (
+				id SERIAL PRIMARY KEY,
+				name TEXT NOT NULL,
+				price TEXT NOT NULL,
+				description TEXT,
+				availability TEXT,
+				imgSrc TEXT,
+				date TEXT
+			)
+		`);
 		console.log("✅ Таблица cards готова");
 	} catch (err) {
 		console.error("❌ Ошибка при создании таблицы:", err);
@@ -115,14 +114,14 @@ app.get("/api/cards", async (req, res) => {
 	}
 });
 
-// Сохранить карточки (перезаписать все)
+// Сохранить все карточки (перезаписать)
 app.post("/api/cards", async (req, res) => {
 	const cards = req.body;
 	try {
-		// очищаем таблицу
+		// Очищаем таблицу
 		await pool.query("TRUNCATE cards");
 
-		// вставляем новые карточки
+		// Вставляем новые карточки
 		for (const c of cards) {
 			await pool.query(
 				"INSERT INTO cards (name, price, description, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
@@ -130,6 +129,7 @@ app.post("/api/cards", async (req, res) => {
 			);
 		}
 
+		console.log(`✅ Сохранено ${cards.length} карточек`);
 		res.json({ status: "ok" });
 	} catch (err) {
 		console.error("❌ Ошибка при сохранении карточек:", err);
@@ -140,18 +140,25 @@ app.post("/api/cards", async (req, res) => {
 // =======================================
 // API для загрузки фото на Cloudinary
 // =======================================
-// Когда фронт отправляет POST /api/upload с файлом,
-// multer-storage-cloudinary сразу загружает его в облако
 app.post("/api/upload", upload.single("photo"), (req, res) => {
+	console.log("📌 Новый запрос на /api/upload");
+
 	try {
-		if (!req.file || !req.file.path) {
-			console.error("❌ Файл не загружен, req.file:", req.file);
+		if (!req.file) {
+			console.error("❌ Файл не дошёл до сервера. req.file:", req.file);
 			return res.status(400).json({ error: "Файл не загружен", file: req.file });
 		}
-		// Возвращаем ссылку на картинку
-		res.json({ url: req.file.path }); // теперь фронт будет получать поле url
+
+		console.log("✅ Файл получен сервером:");
+		console.log("Имя файла:", req.file.originalname);
+		console.log("Путь в Cloudinary:", req.file.path);
+		console.log("Полный объект req.file:", req.file);
+
+		// Возвращаем ссылку на картинку клиенту
+		res.json({ url: req.file.path });
+		console.log("✅ Ответ клиенту отправлен, URL:", req.file.path);
 	} catch (err) {
-		console.error("❌ Ошибка загрузки файла:", err);
+		console.error("❌ Ошибка при обработке файла:", err);
 		res.status(500).json({ error: "Ошибка при загрузке фото", details: err });
 	}
 });
@@ -162,6 +169,8 @@ app.post("/api/upload", upload.single("photo"), (req, res) => {
 app.listen(PORT, () => {
 	console.log(`🚀 Server is running on port ${PORT}`);
 });
+
+
 
 
 // Обратите внимание:
