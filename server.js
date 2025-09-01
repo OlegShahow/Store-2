@@ -58,6 +58,14 @@ cloudinary.config({
 });
 
 // =======================================
+// Логирование Cloudinary config
+// =======================================
+console.log("🔑 Cloudinary config:");
+console.log("cloud_name:", process.env.CLOUDINARY_CLOUD_NAME);
+console.log("api_key:", process.env.CLOUDINARY_API_KEY ? "OK" : "MISSING");
+console.log("api_secret:", process.env.CLOUDINARY_API_SECRET ? "OK" : "MISSING");
+
+// =======================================
 // Настройка Multer + Cloudinary
 // =======================================
 const storage = new CloudinaryStorage({
@@ -130,7 +138,7 @@ app.post("/api/cards", async (req, res) => {
 });
 
 // =======================================
-// API для загрузки фото на Cloudinary с подробным логированием
+// API для загрузки фото на Cloudinary с расширенным логированием
 // =======================================
 app.post("/api/upload", upload.single("photo"), async (req, res) => {
 	console.log("📌 Новый запрос на /api/upload");
@@ -141,24 +149,26 @@ app.post("/api/upload", upload.single("photo"), async (req, res) => {
 			return res.status(400).json({ error: "Файл не загружен", file: req.file });
 		}
 
-		console.log("✅ Файл получен сервером:");
-		console.log("Имя файла:", req.file.originalname);
-		console.log("Путь в Cloudinary:", req.file.path);
-		console.log("Полный объект req.file:", req.file);
+		console.log("✅ Файл получен сервером:", req.file.originalname);
+		console.log("📂 Полный объект req.file:", req.file);
 
-		// Проверка URL
 		if (!req.file.path) {
-			console.error("❌ URL файла пустой");
+			console.error("❌ URL файла пустой. Проверьте CloudinaryStorage и доступ к облаку.");
 			return res.status(500).json({ error: "URL файла пустой" });
 		}
 
-		// Отправка ответа клиенту
+		console.log("✅ URL файла Cloudinary:", req.file.path);
+
+		// Отправка корректного JSON клиенту
 		res.json({ url: req.file.path });
-		console.log("✅ Ответ клиенту отправлен, URL:", req.file.path);
 
 	} catch (err) {
 		console.error("❌ Ошибка при обработке файла:", err);
-		res.status(500).json({ error: "Ошибка при загрузке фото", details: err.message });
+		res.status(500).json({
+			error: "Ошибка при загрузке фото",
+			message: err.message,
+			stack: err.stack,
+		});
 	}
 });
 
@@ -168,6 +178,7 @@ app.post("/api/upload", upload.single("photo"), async (req, res) => {
 app.listen(PORT, () => {
 	console.log(`🚀 Server is running on port ${PORT}`);
 });
+
 
 
 
