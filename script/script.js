@@ -119,6 +119,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	function renderCard(card) {
 		const newCard = document.createElement("div");
 		newCard.classList.add("item--card");
+		console.log("DEBUG card.imgSrc:", card.imgSrc);
 
 		newCard.innerHTML = `
     <div class="item--info">
