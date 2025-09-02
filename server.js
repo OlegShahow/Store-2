@@ -1,28 +1,4 @@
-// Отлично! Давай сделаем полностью рабочий server.js, который будет:
-// Отдавать твои статические файлы(HTML, CSS, JS)
-// Подключаться к базе PostgreSQL на Render
-// Содержать API / api / cards для получения и сохранения карточек
-// Вот готовый код для server.js:
 
-// Отлично, это полностью рабочий server.js для Render. ✅
-// Вот что важно:
-// Статические файлы — весь проект(HTML, CSS, JS, картинки) отдаётся через express.static.
-// PostgreSQL — подключение через pg к базе Render с SSL.
-// API / api / cards — теперь можно получать карточки(GET) и сохранять(POST) в централизованной базе.
-// Таблица cards создаётся автоматически, если её нет.
-
-// =======================================
-// server.js — рабочий для Render PostgreSQL
-// =======================================
-
-
-
-// =======================================
-// server.js — полностью рабочий для Render
-// =======================================
-// =======================================
-// Импорты
-// =======================================
 
 
 const express = require("express");
@@ -109,6 +85,8 @@ createTableIfNotExists();
 // =======================================
 // API для карточек
 // =======================================
+
+// Получение всех карточек
 app.get("/api/cards", async (req, res) => {
 	try {
 		const { rows } = await pool.query("SELECT * FROM cards ORDER BY id ASC");
@@ -119,26 +97,55 @@ app.get("/api/cards", async (req, res) => {
 	}
 });
 
+// Добавление новой карточки
 app.post("/api/cards", async (req, res) => {
-	const cards = req.body;
+	const { name, price, description, availability, imgSrc, date } = req.body;
+
 	try {
-		await pool.query("TRUNCATE cards");
-		for (const c of cards) {
-			await pool.query(
-				"INSERT INTO cards (name, price, description, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
-				[c.name, c.price, c.description, c.availability, c.imgSrc, c.date]
-			);
-		}
-		console.log(`✅ Сохранено ${cards.length} карточек`);
-		res.json({ status: "ok" });
+		const result = await pool.query(
+			"INSERT INTO cards (name, price, description, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+			[name, price, description, availability, imgSrc, date]
+		);
+		console.log("✅ Добавлена карточка:", result.rows[0]);
+		res.json(result.rows[0]);
 	} catch (err) {
-		console.error("❌ Ошибка при сохранении карточек:", err);
-		res.status(500).json({ error: "Ошибка при сохранении карточек" });
+		console.error("❌ Ошибка при добавлении карточки:", err);
+		res.status(500).json({ error: "Ошибка при добавлении карточки" });
+	}
+});
+
+// Удаление карточки
+app.delete("/api/cards/:id", async (req, res) => {
+	const { id } = req.params;
+	try {
+		await pool.query("DELETE FROM cards WHERE id=$1", [id]);
+		console.log(`🗑 Удалена карточка id=${id}`);
+		res.json({ status: "deleted" });
+	} catch (err) {
+		console.error("❌ Ошибка при удалении карточки:", err);
+		res.status(500).json({ error: "Ошибка при удалении карточки" });
+	}
+});
+
+// Обновление статуса карточки
+app.patch("/api/cards/:id/status", async (req, res) => {
+	const { id } = req.params;
+	const { availability } = req.body;
+	try {
+		const result = await pool.query(
+			"UPDATE cards SET availability=$1 WHERE id=$2 RETURNING *",
+			[availability, id]
+		);
+		console.log(`♻️ Обновлён статус карточки id=${id}`);
+		res.json(result.rows[0]);
+	} catch (err) {
+		console.error("❌ Ошибка при обновлении карточки:", err);
+		res.status(500).json({ error: "Ошибка при обновлении карточки" });
 	}
 });
 
 // =======================================
-// API для загрузки фото на Cloudinary с расширенным логированием
+// API для загрузки фото на Cloudinary
 // =======================================
 app.post("/api/upload", upload.single("photo"), async (req, res) => {
 	console.log("📌 Новый запрос на /api/upload");
@@ -146,17 +153,10 @@ app.post("/api/upload", upload.single("photo"), async (req, res) => {
 	try {
 		if (!req.file) {
 			console.error("❌ Файл не дошёл до сервера. req.file:", req.file);
-			return res.status(400).json({ error: "Файл не загружен", file: req.file });
+			return res.status(400).json({ error: "Файл не загружен" });
 		}
 
 		console.log("✅ Файл получен сервером:", req.file.originalname);
-		console.log("📂 Полный объект req.file:", req.file);
-
-		if (!req.file.path) {
-			console.error("❌ URL файла пустой. Проверьте CloudinaryStorage и доступ к облаку.");
-			return res.status(500).json({ error: "URL файла пустой" });
-		}
-
 		console.log("✅ URL файла Cloudinary:", req.file.path);
 
 		// Отправка корректного JSON клиенту
@@ -182,9 +182,3 @@ app.listen(PORT, () => {
 
 
 
-// Обратите внимание:
-// Cloudinary требует регистрации и использования cloud_name, api_key, api_secret, которые можно добавить как Environment Variables в Render.
-// Все загруженные изображения теперь будут храниться в облаке Cloudinary, URL сразу возвращается и сохраняется в базе.
-// Локальная папка uploadsfoto больше не нужна.
-// На клиентском скрипте(main.js) нужно отправлять форму через FormData на / api / upload, как мы делали раньше.
-// Если хочешь, могу переписать твой клиентский JS сразу под Cloudinary, чтобы картинки реально сохранялись и отображались после перезагрузки.
