@@ -104,7 +104,10 @@ window.addEventListener('DOMContentLoaded', () => {
 				body: JSON.stringify(cardsArray),
 			});
 
-			if (!response.ok) throw new Error(`Ошибка при сохранении карточек: ${response.status}`);
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`Ошибка при сохранении карточек: ${response.status} - ${errorText}`);
+			}
 
 			const result = await response.json();
 			console.log("✅ Карточки успешно сохранены");
@@ -289,7 +292,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			// СОЗДАЕМ НОВУЮ КАРТОЧКУ
 			// =======================================
 			const newCard = {
-				id: Math.max(0, ...currentCards.map(c => c.id)) + 1, // Генерируем новый ID
+				id: Math.max(0, ...currentCards.map(c => c.id || 0)) + 1, // Генерируем новый ID
 				name,
 				price,
 				description: desc,
@@ -340,17 +343,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.getElementById('date').value = today;
 	});
 
-	// =======================================
-	// Обработчик ошибок для изображений
-	// =======================================
-	function handleImageError(img) {
-		img.src = './img/placeholder.jpg';
-		img.alt = 'Изображение не найдено';
-	}
-
 	console.log("✨ Frontend JavaScript загружен и готов к работе!");
-
-
 
 
 	// .................................................................................................................
