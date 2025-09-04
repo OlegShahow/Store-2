@@ -172,13 +172,13 @@ app.post("/api/cards", async (req, res) => {
 		// Вставляем только валидные карточки
 		for (const card of validCards) {
 			await client.query(
-				"INSERT INTO cards (name, price, description, availability, imgSrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
+				"INSERT INTO cards (name, price, description, availability, imgsrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
 				[
 					card.name.toString().trim(),
 					card.price.toString().trim(),
 					card.description?.toString().trim() || '',
 					card.availability?.toString().trim() || 'В наличии',
-					card.imgSrc?.toString().trim() || '',
+					card.imgsrc?.toString().trim() || '',  // ← ИСПРАВЛЕНО!
 					card.date?.toString().trim() || new Date().toISOString().split('T')[0]
 				]
 			);
