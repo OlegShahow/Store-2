@@ -131,7 +131,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="info--public">
             <div class="item--name adds"><p>${card.name}</p></div>
             <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
-            <div class="item--foto adds"><img src="${card.imgsrc}" alt="${card.name}" onerror="this.src='./img/placeholder.jpg'"></div>
+            <div class="item--foto adds"><img src="${card.imgsrc}" alt="${card.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'"></div>
             <div class="item--about adds">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
@@ -297,7 +297,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				price,
 				description: desc,
 				availability,
-				imgsrc, // ИСПРАВЛЕНО: imgSrc → imgsrc
+				imgsrc,
 				date
 			};
 
@@ -352,8 +352,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	window.loadAllCards = loadAllCards;
 
 	console.log("✨ Frontend JavaScript загружен и готов к работе!");
-	// .................................................................................................................
-
 
 
 
