@@ -131,7 +131,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="info--public">
             <div class="item--name adds"><p>${card.name}</p></div>
             <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
-            <div class="item--foto adds"><img src="${card.imgSrc}" alt="${card.name}" onerror="this.src='./img/placeholder.jpg'"></div>
+            <div class="item--foto adds"><img src="${card.imgsrc}" alt="${card.name}" onerror="this.src='./img/placeholder.jpg'"></div>
             <div class="item--about adds">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
@@ -260,7 +260,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			const formData = new FormData();
 			formData.append("photo", file);
 
-			let imgSrc = "";
+			let imgsrc = "";
 			try {
 				const uploadRes = await fetch("/api/upload", {
 					method: "POST",
@@ -274,8 +274,8 @@ window.addEventListener('DOMContentLoaded', () => {
 				const data = await uploadRes.json();
 				if (!data.url) throw new Error("Сервер не вернул URL фото");
 
-				imgSrc = data.url;
-				console.log("✅ Фото загружено:", imgSrc);
+				imgsrc = data.url;
+				console.log("✅ Фото загружено:", imgsrc);
 			} catch (err) {
 				console.error("❌ Ошибка при загрузке фото:", err);
 				alert("Не удалось загрузить фото. Проверьте подключение и размер файла (макс. 5MB).");
@@ -297,7 +297,7 @@ window.addEventListener('DOMContentLoaded', () => {
 				price,
 				description: desc,
 				availability,
-				imgSrc,
+				imgsrc, // ИСПРАВЛЕНО: imgSrc → imgsrc
 				date
 			};
 
@@ -343,9 +343,15 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.getElementById('date').value = today;
 	});
 
+	// =======================================
+	// Делаем функции глобальными для отладки
+	// =======================================
+	window.getCards = getCards;
+	window.saveAllCards = saveAllCards;
+	window.renderCard = renderCard;
+	window.loadAllCards = loadAllCards;
+
 	console.log("✨ Frontend JavaScript загружен и готов к работе!");
-
-
 	// .................................................................................................................
 
 
