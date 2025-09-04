@@ -12,19 +12,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =======================================
-// Подключение к базе PostgreSQL (Render)
-// =======================================
-const pool = new Pool({
-	connectionString: process.env.DATABASE_URL,
-	ssl: { rejectUnauthorized: false },
-});
-
-// Проверка подключения к базе
-pool.connect()
-	.then(() => console.log("✅ Подключение к базе PostgreSQL успешно"))
-	.catch(err => console.error("❌ Ошибка подключения к базе PostgreSQL:", err));
-
-// =======================================
 // Настройка Cloudinary
 // =======================================
 cloudinary.config({
@@ -33,22 +20,17 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// =======================================
-// Логирование Cloudinary config
-// =======================================
-console.log("🔑 Cloudinary config:");
-console.log("cloud_name:", process.env.CLOUDINARY_CLOUD_NAME);
-console.log("api_key:", process.env.CLOUDINARY_API_KEY ? "OK" : "MISSING");
-console.log("api_secret:", process.env.CLOUDINARY_API_SECRET ? "OK" : "MISSING");
+console.log("🔑 Cloudinary настроен для:", process.env.CLOUDINARY_CLOUD_NAME);
 
 // =======================================
-// Настройка Multer + Cloudinary
+// Настройка Multer + Cloudinary для загрузки файлов
 // =======================================
 const storage = new CloudinaryStorage({
-	cloudinary,
+	cloudinary: cloudinary,
 	params: {
 		folder: "my-online-store",
 		allowed_formats: ["jpg", "jpeg", "png", "gif"],
+		transformation: [{ width: 800, height: 600, crop: "limit" }]
 	},
 });
 
@@ -62,9 +44,37 @@ const upload = multer({
 		}
 	},
 	limits: {
-		fileSize: 5 * 1024 * 1024
+		fileSize: 5 * 1024 * 1024 // 5MB
 	}
 });
+
+// =======================================
+// Подключение к PostgreSQL (Render)
+// =======================================
+const pool = new Pool({
+	connectionString: process.env.DATABASE_URL,
+	ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+	idleTimeoutMillis: 30000,
+	connectionTimeoutMillis: 5000,
+});
+
+// Функция для проверки подключения к БД
+async function checkDatabaseConnection() {
+	let retries = 5;
+	while (retries > 0) {
+		try {
+			const client = await pool.connect();
+			console.log("✅ Подключение к PostgreSQL успешно");
+			client.release();
+			return true;
+		} catch (err) {
+			console.error(`❌ Ошибка подключения к PostgreSQL (попыток left: ${retries}):`, err.message);
+			retries -= 1;
+			await new Promise(resolve => setTimeout(resolve, 5000)); // Ждем 5 секунд
+		}
+	}
+	throw new Error("Не удалось подключиться к PostgreSQL после нескольких попыток");
+}
 
 // =======================================
 // Middleware
@@ -72,6 +82,12 @@ const upload = multer({
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname)));
+
+// Логирование всех запросов
+app.use((req, res, next) => {
+	console.log(`${new Date().toISOString()} ${req.method} ${req.path}`);
+	next();
+});
 
 // Обработчик ошибок Multer
 app.use((error, req, res, next) => {
@@ -86,41 +102,33 @@ app.use((error, req, res, next) => {
 // =======================================
 // Создание таблицы cards (если её нет)
 // =======================================
-async function createTableIfNotExists() {
+async function initializeDatabase() {
 	try {
 		await pool.query(`
-            CREATE TABLE IF NOT EXISTS cards (
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                price TEXT NOT NULL,
-                description TEXT,
-                availability TEXT,
-                imgSrc TEXT,
-                date TEXT
-            )
-        `);
-		console.log("✅ Таблица cards готова");
+      CREATE TABLE IF NOT EXISTS cards (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        price TEXT NOT NULL,
+        description TEXT,
+        availability TEXT DEFAULT 'В наличии',
+        imgSrc TEXT,
+        date TEXT DEFAULT TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD'),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+		// Создаем индекс для быстрого поиска
+		await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
+    `);
+
+		console.log("✅ Таблица cards инициализирована");
 	} catch (err) {
-		console.error("❌ Ошибка при создании таблицы:", err);
+		console.error("❌ Ошибка при инициализации таблицы:", err);
+		throw err;
 	}
 }
-createTableIfNotExists();
-
-// =======================================
-// Очистка битых карточек (ВРЕМЕННЫЙ ЭНДПОИНТ)
-// =======================================
-app.delete('/api/cards/clean', async (req, res) => {
-	try {
-		const result = await pool.query(
-			"DELETE FROM cards WHERE name IS NULL OR name = '' OR price IS NULL OR price = ''"
-		);
-		console.log(`🗑️ Удалено ${result.rowCount} битых карточек`);
-		res.json({ deleted: result.rowCount });
-	} catch (err) {
-		console.error("❌ Ошибка при очистке:", err);
-		res.status(500).json({ error: "Ошибка очистки" });
-	}
-});
 
 // =======================================
 // API для карточек
@@ -129,7 +137,9 @@ app.delete('/api/cards/clean', async (req, res) => {
 // Получение всех карточек
 app.get("/api/cards", async (req, res) => {
 	try {
-		const { rows } = await pool.query("SELECT * FROM cards ORDER BY id ASC");
+		console.log("📥 Запрос на получение всех карточек");
+		const { rows } = await pool.query("SELECT * FROM cards ORDER BY created_at DESC");
+		console.log(`✅ Отправлено ${rows.length} карточек`);
 		res.json(rows);
 	} catch (err) {
 		console.error("❌ Ошибка при получении карточек:", err);
@@ -137,93 +147,121 @@ app.get("/api/cards", async (req, res) => {
 	}
 });
 
-// Сохранение ВСЕХ карточек (как ожидает фронтенд)
-app.post("/api/cards", async (req, res) => {
-	const cards = req.body;
-
-	console.log("📦 Получено карточек для сохранения:", cards.length);
-
-	// Валидация
-	if (!Array.isArray(cards)) {
-		return res.status(400).json({ error: "Ожидается массив карточек" });
-	}
-
-	// Фильтруем битые карточки
-	const validCards = cards.filter(card =>
-		card &&
-		card.name &&
-		card.name.toString().trim() !== '' &&
-		card.price &&
-		card.price.toString().trim() !== ''
-	);
-
-	if (validCards.length !== cards.length) {
-		console.warn(`⚠️  Отфильтровано ${cards.length - validCards.length} битых карточек`);
-	}
-
-	const client = await pool.connect();
+// Добавление ОДНОЙ карточки
+app.post("/api/cards", upload.single('photo'), async (req, res) => {
+	console.log("📦 Получен запрос на добавление карточки");
 
 	try {
-		await client.query('BEGIN');
+		const { name, price, description, availability } = req.body;
 
-		// Очищаем таблицу
-		await client.query("TRUNCATE cards");
-
-		// Вставляем только валидные карточки
-		for (const card of validCards) {
-			await client.query(
-				"INSERT INTO cards (name, price, description, availability, imgsrc, date) VALUES ($1,$2,$3,$4,$5,$6)",
-				[
-					card.name.toString().trim(),
-					card.price.toString().trim(),
-					card.description?.toString().trim() || '',
-					card.availability?.toString().trim() || 'В наличии',
-					card.imgsrc?.toString().trim() || '',  // ← ИСПРАВЛЕНО!
-					card.date?.toString().trim() || new Date().toISOString().split('T')[0]
-				]
-			);
+		// Валидация обязательных полей
+		if (!name || !price) {
+			return res.status(400).json({ error: "Название и цена обязательны" });
 		}
 
-		await client.query('COMMIT');
-		console.log(`✅ Сохранено ${validCards.length} валидных карточек`);
-		res.json({ status: "ok", saved: validCards.length });
+		let imageUrl = '';
+
+		// Обработка загруженного файла
+		if (req.file) {
+			imageUrl = req.file.path;
+			console.log("✅ Фото загружено на Cloudinary:", imageUrl);
+		}
+
+		// Вставка карточки в БД
+		const result = await pool.query(
+			`INSERT INTO cards (name, price, description, availability, imgSrc, date) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
+			[
+				name.toString().trim(),
+				price.toString().trim(),
+				(description || '').toString().trim(),
+				(availability || 'В наличии').toString().trim(),
+				imageUrl,
+				new Date().toISOString().split('T')[0]
+			]
+		);
+
+		const newCard = result.rows[0];
+		console.log("✅ Карточка добавлена в БД, ID:", newCard.id);
+
+		res.status(201).json(newCard);
 
 	} catch (err) {
-		await client.query('ROLLBACK');
-		console.error("❌ Ошибка при сохранении карточек:", err);
-		res.status(500).json({ error: "Ошибка при сохранении карточек" });
-	} finally {
-		client.release();
+		console.error("❌ Ошибка при добавлении карточки:", err);
+		res.status(500).json({ error: "Ошибка при добавлении карточки" });
 	}
 });
 
 // Удаление карточки
 app.delete("/api/cards/:id", async (req, res) => {
 	const { id } = req.params;
+
 	try {
-		await pool.query("DELETE FROM cards WHERE id=$1", [id]);
-		console.log(`🗑 Удалена карточка id=${id}`);
-		res.json({ status: "deleted" });
+		const result = await pool.query(
+			"DELETE FROM cards WHERE id = $1 RETURNING *",
+			[id]
+		);
+
+		if (result.rows.length === 0) {
+			return res.status(404).json({ error: "Карточка не найдена" });
+		}
+
+		console.log(`🗑️ Удалена карточка ID: ${id}`);
+		res.json({ status: "deleted", id: id });
+
 	} catch (err) {
 		console.error("❌ Ошибка при удалении карточки:", err);
 		res.status(500).json({ error: "Ошибка при удалении карточки" });
 	}
 });
 
-// Обновление статуса карточки
-app.patch("/api/cards/:id/status", async (req, res) => {
+// Обновление карточки
+app.put("/api/cards/:id", async (req, res) => {
 	const { id } = req.params;
-	const { availability } = req.body;
+	const { name, price, description, availability } = req.body;
+
 	try {
 		const result = await pool.query(
-			"UPDATE cards SET availability=$1 WHERE id=$2 RETURNING *",
-			[availability, id]
+			`UPDATE cards 
+       SET name = $1, price = $2, description = $3, availability = $4, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $5 
+       RETURNING *`,
+			[name, price, description, availability, id]
 		);
-		console.log(`♻️ Обновлён статус карточки id=${id}`);
+
+		if (result.rows.length === 0) {
+			return res.status(404).json({ error: "Карточка не найдена" });
+		}
+
+		console.log(`✏️ Обновлена карточка ID: ${id}`);
 		res.json(result.rows[0]);
+
 	} catch (err) {
 		console.error("❌ Ошибка при обновлении карточки:", err);
 		res.status(500).json({ error: "Ошибка при обновлении карточки" });
+	}
+});
+
+// Получение одной карточки по ID
+app.get("/api/cards/:id", async (req, res) => {
+	const { id } = req.params;
+
+	try {
+		const result = await pool.query(
+			"SELECT * FROM cards WHERE id = $1",
+			[id]
+		);
+
+		if (result.rows.length === 0) {
+			return res.status(404).json({ error: "Карточка не найдена" });
+		}
+
+		res.json(result.rows[0]);
+
+	} catch (err) {
+		console.error("❌ Ошибка при получении карточки:", err);
+		res.status(500).json({ error: "Ошибка при получении карточки" });
 	}
 });
 
@@ -231,21 +269,25 @@ app.patch("/api/cards/:id/status", async (req, res) => {
 // API для загрузки фото на Cloudinary
 // =======================================
 app.post("/api/upload", upload.single("photo"), async (req, res) => {
-	console.log("📌 Новый запрос на /api/upload");
+	console.log("📸 Запрос на загрузку фото");
 
 	try {
 		if (!req.file) {
-			console.error("❌ Файл не дошёл до сервера");
+			console.error("❌ Файл не получен");
 			return res.status(400).json({ error: "Файл не загружен" });
 		}
 
-		console.log("✅ Файл получен сервером:", req.file.originalname);
-		console.log("✅ URL файла Cloudinary:", req.file.path);
+		console.log("✅ Файл загружен:", req.file.originalname);
+		console.log("✅ URL Cloudinary:", req.file.path);
 
-		res.json({ url: req.file.path });
+		res.json({
+			success: true,
+			url: req.file.path,
+			message: "Фото успешно загружено"
+		});
 
 	} catch (err) {
-		console.error("❌ Ошибка при обработке файла:", err);
+		console.error("❌ Ошибка при загрузке файла:", err);
 		res.status(500).json({
 			error: "Ошибка при загрузке фото",
 			message: err.message
@@ -254,20 +296,83 @@ app.post("/api/upload", upload.single("photo"), async (req, res) => {
 });
 
 // =======================================
-// Запуск сервера
+// Health check endpoint
 // =======================================
-app.listen(PORT, () => {
-	console.log(`🚀 Server is running on port ${PORT}`);
+app.get("/api/health", async (req, res) => {
+	try {
+		await pool.query("SELECT 1");
+		res.json({
+			status: "OK",
+			database: "connected",
+			timestamp: new Date().toISOString()
+		});
+	} catch (err) {
+		res.status(500).json({
+			status: "ERROR",
+			database: "disconnected",
+			error: err.message
+		});
+	}
 });
 
 // =======================================
-// Грейсфул шатдаун
+// Обработка 404
 // =======================================
+app.use((req, res) => {
+	console.warn(`⚠️  Маршрут не найден: ${req.method} ${req.url}`);
+	res.status(404).json({ error: "Маршрут не найден" });
+});
+
+// =======================================
+// Глобальный обработчик ошибок
+// =======================================
+app.use((err, req, res, next) => {
+	console.error("🔥 Необработанная ошибка:", err);
+	res.status(500).json({
+		error: "Внутренняя ошибка сервера",
+		message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+	});
+});
+
+// =======================================
+// Инициализация и запуск сервера
+// =======================================
+async function startServer() {
+	try {
+		// Ждем подключения к БД
+		await checkDatabaseConnection();
+
+		// Инициализируем таблицы
+		await initializeDatabase();
+
+		// Запускаем сервер
+		app.listen(PORT, () => {
+			console.log(`🚀 Сервер запущен на порту ${PORT}`);
+			console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+		});
+
+	} catch (err) {
+		console.error("❌ Не удалось запустить сервер:", err);
+		process.exit(1);
+	}
+}
+
+// Обработка graceful shutdown
 process.on('SIGINT', async () => {
-	console.log('\n🔻 Завершение работы...');
+	console.log('\n🔻 Завершение работы сервера...');
 	await pool.end();
+	console.log('✅ Подключение к БД закрыто');
 	process.exit(0);
 });
 
+process.on('SIGTERM', async () => {
+	console.log('\n🔻 Получен SIGTERM, завершение работы...');
+	await pool.end();
+	console.log('✅ Подключение к БД закрыто');
+	process.exit(0);
+});
+
+// Запускаем сервер
+startServer();
 
 
