@@ -136,7 +136,7 @@ window.addEventListener('DOMContentLoaded', () => {
             <div class="item--availability adds">${card.availability}</div>
             <div class="item--korzina">
                 <button type="button" class="korz--btn">
-                    <img src="./icon/k2.png" alt="Корзина">
+                  <a href="corzina.html"><img src="./icon/k2.png" alt="Корзина"></a>  
                 </button>
             </div>
         </div>
