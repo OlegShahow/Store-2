@@ -94,26 +94,78 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// =======================================
-	// Сохранение всех карточек на сервер
+	// Добавление ОДНОЙ карточки на сервер
 	// =======================================
-	async function saveAllCards(cardsArray) {
+	async function addCard(cardData) {
 		try {
+			const formData = new FormData();
+
+			// Добавляем все поля карточки
+			formData.append('name', cardData.name);
+			formData.append('price', cardData.price);
+			formData.append('description', cardData.description || '');
+			formData.append('availability', cardData.availability || 'В наличии');
+
+			// Если есть файл - добавляем его
+			if (cardData.photoFile) {
+				formData.append('photo', cardData.photoFile);
+			}
+
 			const response = await fetch("/api/cards", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(cardsArray),
+				body: formData  // FormData автоматически установит Content-Type
 			});
 
 			if (!response.ok) {
-				const errorText = await response.text();
-				throw new Error(`Ошибка при сохранении карточек: ${response.status} - ${errorText}`);
+				const errorData = await response.json();
+				throw new Error(`Ошибка при добавлении карточки: ${response.status} - ${JSON.stringify(errorData)}`);
 			}
 
-			const result = await response.json();
-			console.log("✅ Карточки успешно сохранены");
-			return result;
+			return await response.json();
 		} catch (err) {
-			console.error("❌ saveAllCards Error:", err);
+			console.error("❌ addCard Error:", err);
+			throw err;
+		}
+	}
+
+	// =======================================
+	// Удаление ОДНОЙ карточки
+	// =======================================
+	async function deleteCard(cardId) {
+		try {
+			const response = await fetch(`/api/cards/${cardId}`, {
+				method: "DELETE"
+			});
+
+			if (!response.ok) {
+				throw new Error(`Ошибка при удалении карточки: ${response.status}`);
+			}
+
+			return await response.json();
+		} catch (err) {
+			console.error("❌ deleteCard Error:", err);
+			throw err;
+		}
+	}
+
+	// =======================================
+	// Обновление статуса ОДНОЙ карточки
+	// =======================================
+	async function updateCardStatus(cardId, newStatus) {
+		try {
+			const response = await fetch(`/api/cards/${cardId}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ availability: newStatus })
+			});
+
+			if (!response.ok) {
+				throw new Error(`Ошибка при обновлении статуса: ${response.status}`);
+			}
+
+			return await response.json();
+		} catch (err) {
+			console.error("❌ updateCardStatus Error:", err);
 			throw err;
 		}
 	}
@@ -131,7 +183,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="info--public">
             <div class="item--name adds"><p>${card.name}</p></div>
             <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
-            <div class="item--foto adds"><img src="${card.imgsrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
+            <div class="item--foto adds"><img src="${card.imgsrc || card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
             <div class="item--about adds">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
@@ -169,17 +221,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		delButton.addEventListener("click", async () => {
 			if (confirm("Удалить этот товар?")) {
 				try {
-					// Получаем текущие карточки напрямую
-					const response = await fetch('/api/cards');
-					const currentCards = await response.json();
-
-					// Фильтруем удаляемую карточку
-					const updatedCards = currentCards.filter(c => c.id !== card.id);
-
-					// Сохраняем обновленный массив
-					await saveAllCards(updatedCards);
-
-					// Удаляем из DOM
+					await deleteCard(card.id);
 					newCard.remove();
 					console.log("🗑 Карточка удалена");
 				} catch (err) {
@@ -196,24 +238,14 @@ window.addEventListener('DOMContentLoaded', () => {
 		const availabilityElement = newCard.querySelector(".item--availability");
 		statButton.addEventListener("click", async () => {
 			try {
-				// Получаем текущие карточки напрямую
-				const response = await fetch('/api/cards');
-				const currentCards = await response.json();
+				const newStatus = card.availability === "В наличии" ? "Нет в наличии" : "В наличии";
+				await updateCardStatus(card.id, newStatus);
 
-				const cardToUpdate = currentCards.find(c => c.id === card.id);
+				// Обновляем отображение
+				availabilityElement.textContent = newStatus;
+				card.availability = newStatus;
 
-				if (cardToUpdate) {
-					// Меняем статус
-					const newStatus = cardToUpdate.availability === "В наличии" ? "Нет в наличии" : "В наличии";
-					cardToUpdate.availability = newStatus;
-
-					// Обновляем отображение
-					availabilityElement.textContent = newStatus;
-
-					// Сохраняем все карточки
-					await saveAllCards(currentCards);
-					console.log("✅ Статус обновлен:", newStatus);
-				}
+				console.log("✅ Статус обновлен:", newStatus);
 			} catch (err) {
 				console.error("❌ Ошибка при изменении статуса:", err);
 				alert("Не удалось изменить статус");
@@ -253,7 +285,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			const desc = form.desc.value.trim();
 			const availability = form.availability.value.trim() || "В наличии";
 			const file = form.photo.files[0];
-			const date = form.date.value.trim();
 
 			if (!name || !price || !file) {
 				alert("Заполните обязательные поля: название, цену и выберите фото.");
@@ -261,63 +292,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 
 			// =======================================
-			// Загрузка фото на сервер через /api/upload
+			// Добавляем карточку (фото загрузится автоматически)
 			// =======================================
-			console.log("📤 Начинаем загрузку фото...");
-			const formData = new FormData();
-			formData.append("photo", file);
-
-			let imgsrc = "";
-			try {
-				const uploadRes = await fetch("/api/upload", {
-					method: "POST",
-					body: formData
-				});
-
-				if (!uploadRes.ok) {
-					throw new Error(`Ошибка сервера: ${uploadRes.status}`);
-				}
-
-				const data = await uploadRes.json();
-				if (!data.url) throw new Error("Сервер не вернул URL фото");
-
-				imgsrc = data.url;
-				console.log("✅ Фото загружено:", imgsrc);
-			} catch (err) {
-				console.error("❌ Ошибка при загрузке фото:", err);
-				alert("Не удалось загрузить фото. Проверьте подключение и размер файла (макс. 5MB).");
-				return;
-			}
-
-			// =======================================
-			// ПОЛУЧАЕМ ТЕКУЩИЙ СПИСОК КАРТОЧЕК
-			// =======================================
-			console.log("📋 Получаем текущие карточки...");
-			const currentCards = await getCards();
-
-			// =======================================
-			// СОЗДАЕМ НОВУЮ КАРТОЧКУ
-			// =======================================
-			const newCard = {
-				id: Math.max(0, ...currentCards.map(c => c.id || 0)) + 1,
+			const newCard = await addCard({
 				name,
 				price,
 				description: desc,
 				availability,
-				imgsrc,
-				date
-			};
-
-			// =======================================
-			// ДОБАВЛЯЕМ К СУЩЕСТВУЮЩИМ КАРТОЧКАМ
-			// =======================================
-			const updatedCards = [...currentCards, newCard];
-			console.log("🔄 Обновляем массив карточек...");
-
-			// =======================================
-			// ОТПРАВЛЯЕМ ВЕСЬ МАССИВ КАРТОЧЕК НА СЕРВЕР
-			// =======================================
-			await saveAllCards(updatedCards);
+				photoFile: file
+			});
 
 			// =======================================
 			// Рендерим новую карточку
@@ -330,7 +313,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		} catch (err) {
 			console.error("❌ Критическая ошибка при добавлении товара:", err);
-			alert("Произошла ошибка при добавлении товара. Проверьте консоль для подробностей.");
+			alert("Произошла ошибка при добавлении товара: " + err.message);
 		} finally {
 			// Разблокируем кнопку в любом случае
 			submitButton.textContent = originalText;
@@ -344,15 +327,9 @@ window.addEventListener('DOMContentLoaded', () => {
 	document.addEventListener('DOMContentLoaded', () => {
 		console.log("🚀 Инициализация приложения...");
 		loadAllCards();
-
-		// Устанавливаем сегодняшнюю дату по умолчанию
-		const today = new Date().toISOString().split('T')[0];
-		document.getElementById('date').value = today;
 	});
 
 	console.log("✨ Frontend JavaScript загружен и готов к работе!");
-
-
 
 
 
