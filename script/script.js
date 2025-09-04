@@ -131,7 +131,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="info--public">
             <div class="item--name adds"><p>${card.name}</p></div>
             <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
-            <div class="item--foto adds"><img src="${card.imgsrc}" alt="${card.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'"></div>
+            <div class="item--foto adds"><img src="${card.imgsrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
             <div class="item--about adds">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
@@ -169,12 +169,16 @@ window.addEventListener('DOMContentLoaded', () => {
 		delButton.addEventListener("click", async () => {
 			if (confirm("Удалить этот товар?")) {
 				try {
-					// Получаем текущие карточки
-					const currentCards = await getCards();
+					// Получаем текущие карточки напрямую
+					const response = await fetch('/api/cards');
+					const currentCards = await response.json();
+
 					// Фильтруем удаляемую карточку
 					const updatedCards = currentCards.filter(c => c.id !== card.id);
+
 					// Сохраняем обновленный массив
 					await saveAllCards(updatedCards);
+
 					// Удаляем из DOM
 					newCard.remove();
 					console.log("🗑 Карточка удалена");
@@ -192,7 +196,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		const availabilityElement = newCard.querySelector(".item--availability");
 		statButton.addEventListener("click", async () => {
 			try {
-				const currentCards = await getCards();
+				// Получаем текущие карточки напрямую
+				const response = await fetch('/api/cards');
+				const currentCards = await response.json();
+
 				const cardToUpdate = currentCards.find(c => c.id === card.id);
 
 				if (cardToUpdate) {
@@ -229,7 +236,7 @@ window.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// =======================================
-	// Добавление новой карточки (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+	// Добавление новой карточки
 	// =======================================
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
@@ -292,7 +299,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			// СОЗДАЕМ НОВУЮ КАРТОЧКУ
 			// =======================================
 			const newCard = {
-				id: Math.max(0, ...currentCards.map(c => c.id || 0)) + 1, // Генерируем новый ID
+				id: Math.max(0, ...currentCards.map(c => c.id || 0)) + 1,
 				name,
 				price,
 				description: desc,
@@ -343,18 +350,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.getElementById('date').value = today;
 	});
 
-	// =======================================
-	// Делаем функции глобальными для отладки
-	// =======================================
-	window.getCards = getCards;
-	window.saveAllCards = saveAllCards;
-	window.renderCard = renderCard;
-	window.loadAllCards = loadAllCards;
-
 	console.log("✨ Frontend JavaScript загружен и готов к работе!");
-
-
-
 
 
 
