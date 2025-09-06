@@ -80,15 +80,38 @@ window.addEventListener('DOMContentLoaded', () => {
 	const cardsContainer = document.querySelector(".main__cards");
 
 	// =======================================
-	// Получение всех карточек с сервера
+	// Получение всех карточек с сервера (с обработкой "спящего" сервера)
 	// =======================================
 	async function getCards() {
 		try {
-			const response = await fetch("/api/cards");
-			if (!response.ok) throw new Error(`Ошибка при получении карточек: ${response.status}`);
-			return await response.json();
+			console.log("🔄 Запрос карточек... (может занять до 60 секунд)");
+
+			// Увеличиваем таймаут для "просыпающегося" сервера Render
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+			const response = await fetch("/api/cards", {
+				signal: controller.signal
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(`Ошибка сервера: ${response.status} - ${errorText}`);
+			}
+
+			const cards = await response.json();
+			console.log(`✅ Получено ${cards.length} карточек`);
+			return cards;
+
 		} catch (err) {
-			console.error("❌ getCards Error:", err);
+			if (err.name === 'AbortError') {
+				console.error("❌ Таймаут запроса: сервер долго не отвечает (возможно, 'спит')");
+				alert("Сервер просыпается... Попробуйте через 30 секунд.");
+			} else {
+				console.error("❌ getCards Error:", err);
+			}
 			return [];
 		}
 	}
@@ -98,31 +121,44 @@ window.addEventListener('DOMContentLoaded', () => {
 	// =======================================
 	async function addCard(cardData) {
 		try {
-			const formData = new FormData();
+			console.log("📤 Отправка новой карточки...");
 
-			// Добавляем все поля карточки
+			const formData = new FormData();
 			formData.append('name', cardData.name);
 			formData.append('price', cardData.price);
 			formData.append('description', cardData.description || '');
 			formData.append('availability', cardData.availability || 'В наличии');
 
-			// Если есть файл - добавляем его
 			if (cardData.photoFile) {
 				formData.append('photo', cardData.photoFile);
 			}
 
+			// Таймаут для загрузки
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 120000);
+
 			const response = await fetch("/api/cards", {
 				method: "POST",
-				body: formData  // FormData автоматически установит Content-Type
+				body: formData,
+				signal: controller.signal
 			});
+
+			clearTimeout(timeoutId);
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(`Ошибка при добавлении карточки: ${response.status} - ${JSON.stringify(errorData)}`);
+				throw new Error(`Ошибка сервера: ${response.status} - ${JSON.stringify(errorData)}`);
 			}
 
-			return await response.json();
+			const result = await response.json();
+			console.log("✅ Карточка добавлена, ID:", result.id);
+			return result;
+
 		} catch (err) {
+			if (err.name === 'AbortError') {
+				console.error("❌ Таймаут при добавлении: сервер не ответил вовремя");
+				throw new Error("Сервер не ответил. Попробуйте снова.");
+			}
 			console.error("❌ addCard Error:", err);
 			throw err;
 		}
@@ -138,13 +174,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Ошибка при удалении карточки: ${response.status}`);
+				throw new Error(`Ошибка сервера: ${response.status}`);
 			}
 
+			console.log("🗑️ Карточка удалена, ID:", cardId);
 			return await response.json();
+
 		} catch (err) {
 			console.error("❌ deleteCard Error:", err);
-			throw err;
+			throw new Error("Не удалось удалить товар");
 		}
 	}
 
@@ -160,13 +198,15 @@ window.addEventListener('DOMContentLoaded', () => {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Ошибка при обновлении статуса: ${response.status}`);
+				throw new Error(`Ошибка сервера: ${response.status}`);
 			}
 
+			console.log("🔄 Статус обновлен, ID:", cardId);
 			return await response.json();
+
 		} catch (err) {
 			console.error("❌ updateCardStatus Error:", err);
-			throw err;
+			throw new Error("Не удалось изменить статус");
 		}
 	}
 
@@ -205,50 +245,37 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		cardsContainer.appendChild(newCard);
 
-		// =======================================
 		// Кнопка "О товаре"
-		// =======================================
 		const abButton = newCard.querySelector(".ab");
 		const description = newCard.querySelector(".description");
 		abButton.addEventListener("click", () => {
 			description.style.display = description.style.display === "flex" ? "none" : "flex";
 		});
 
-		// =======================================
 		// Удаление карточки
-		// =======================================
 		const delButton = newCard.querySelector(".del");
 		delButton.addEventListener("click", async () => {
 			if (confirm("Удалить этот товар?")) {
 				try {
 					await deleteCard(card.id);
 					newCard.remove();
-					console.log("🗑 Карточка удалена");
 				} catch (err) {
-					console.error("❌ Ошибка при удалении:", err);
-					alert("Не удалось удалить товар");
+					alert(err.message);
 				}
 			}
 		});
 
-		// =======================================
 		// Кнопка "Статус"
-		// =======================================
 		const statButton = newCard.querySelector(".stat");
 		const availabilityElement = newCard.querySelector(".item--availability");
 		statButton.addEventListener("click", async () => {
 			try {
 				const newStatus = card.availability === "В наличии" ? "Нет в наличии" : "В наличии";
 				await updateCardStatus(card.id, newStatus);
-
-				// Обновляем отображение
 				availabilityElement.textContent = newStatus;
 				card.availability = newStatus;
-
-				console.log("✅ Статус обновлен:", newStatus);
 			} catch (err) {
-				console.error("❌ Ошибка при изменении статуса:", err);
-				alert("Не удалось изменить статус");
+				alert(err.message);
 			}
 		});
 	}
@@ -258,12 +285,20 @@ window.addEventListener('DOMContentLoaded', () => {
 	// =======================================
 	async function loadAllCards() {
 		try {
+			console.log("🔄 Загрузка карточек...");
 			const cards = await getCards();
-			cardsContainer.innerHTML = ''; // Очищаем контейнер
-			cards.forEach(card => renderCard(card));
-			console.log(`✅ Загружено ${cards.length} карточек`);
+			cardsContainer.innerHTML = '';
+
+			if (cards.length === 0) {
+				console.log("ℹ️ Карточек нет");
+				cardsContainer.innerHTML = '<div class="empty-state">Товаров пока нет</div>';
+			} else {
+				cards.forEach(card => renderCard(card));
+				console.log(`✅ Загружено ${cards.length} карточек`);
+			}
 		} catch (err) {
 			console.error("❌ Ошибка при загрузке карточек:", err);
+			cardsContainer.innerHTML = '<div class="empty-state">Ошибка загрузки товаров</div>';
 		}
 	}
 
@@ -273,7 +308,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
-		// Блокируем кнопку чтобы избежать повторных нажатий
 		const submitButton = form.querySelector('button[type="submit"]');
 		const originalText = submitButton.textContent;
 		submitButton.textContent = "Добавляем...";
@@ -286,14 +320,16 @@ window.addEventListener('DOMContentLoaded', () => {
 			const availability = form.availability.value.trim() || "В наличии";
 			const file = form.photo.files[0];
 
-			if (!name || !price || !file) {
-				alert("Заполните обязательные поля: название, цену и выберите фото.");
+			if (!name || !price) {
+				alert("Заполните название и цену!");
 				return;
 			}
 
-			// =======================================
-			// Добавляем карточку (фото загрузится автоматически)
-			// =======================================
+			if (!file) {
+				alert("Выберите фото товара!");
+				return;
+			}
+
 			const newCard = await addCard({
 				name,
 				price,
@@ -302,20 +338,14 @@ window.addEventListener('DOMContentLoaded', () => {
 				photoFile: file
 			});
 
-			// =======================================
-			// Рендерим новую карточку
-			// =======================================
 			renderCard(newCard);
 			form.reset();
-
-			console.log("✅ Товар успешно добавлен!");
-			alert("Товар успешно добавлен!");
+			alert("✅ Товар успешно добавлен!");
 
 		} catch (err) {
-			console.error("❌ Критическая ошибка при добавлении товара:", err);
-			alert("Произошла ошибка при добавлении товара: " + err.message);
+			console.error("❌ Ошибка при добавлении товара:", err);
+			alert("Ошибка: " + err.message);
 		} finally {
-			// Разблокируем кнопку в любом случае
 			submitButton.textContent = originalText;
 			submitButton.disabled = false;
 		}
@@ -325,14 +355,11 @@ window.addEventListener('DOMContentLoaded', () => {
 	// Инициализация при загрузке страницы
 	// =======================================
 	document.addEventListener('DOMContentLoaded', () => {
-		console.log("🚀 Инициализация приложения...");
+		console.log("🚀 Приложение запускается...");
 		loadAllCards();
 	});
 
-	console.log("✨ Frontend JavaScript загружен и готов к работе!");
-
-
-
+	console.log("✨ Frontend JavaScript загружен!");
 
 
 
