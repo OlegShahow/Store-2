@@ -73,20 +73,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 
-	// =======================================
 	// Находим форму и контейнер для карточек
-	// =======================================
 	const form = document.getElementById("add-card-form");
 	const cardsContainer = document.querySelector(".main__cards");
 
-	// =======================================
 	// Получение всех карточек с сервера (с обработкой "спящего" сервера)
-	// =======================================
 	async function getCards() {
 		try {
 			console.log("🔄 Запрос карточек... (может занять до 60 секунд)");
 
-			// Увеличиваем таймаут для "просыпающегося" сервера Render
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 60000);
 
@@ -116,9 +111,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// =======================================
 	// Добавление ОДНОЙ карточки на сервер
-	// =======================================
 	async function addCard(cardData) {
 		try {
 			console.log("📤 Отправка новой карточки...");
@@ -130,10 +123,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			formData.append('availability', cardData.availability || 'В наличии');
 
 			if (cardData.photoFile) {
+				if (!cardData.photoFile.type.startsWith('image/')) {
+					throw new Error("Файл должен быть изображением");
+				}
 				formData.append('photo', cardData.photoFile);
 			}
 
-			// Таймаут для загрузки
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 120000);
 
@@ -146,7 +141,12 @@ window.addEventListener('DOMContentLoaded', () => {
 			clearTimeout(timeoutId);
 
 			if (!response.ok) {
-				const errorData = await response.json();
+				let errorData;
+				try {
+					errorData = await response.json();
+				} catch {
+					errorData = await response.text();
+				}
 				throw new Error(`Ошибка сервера: ${response.status} - ${JSON.stringify(errorData)}`);
 			}
 
@@ -164,9 +164,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// =======================================
 	// Удаление ОДНОЙ карточки
-	// =======================================
 	async function deleteCard(cardId) {
 		try {
 			const response = await fetch(`/api/cards/${cardId}`, {
@@ -186,9 +184,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// =======================================
 	// Обновление статуса ОДНОЙ карточки
-	// =======================================
 	async function updateCardStatus(cardId, newStatus) {
 		try {
 			const response = await fetch(`/api/cards/${cardId}`, {
@@ -210,9 +206,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// =======================================
 	// Функция рендера одной карточки
-	// =======================================
 	function renderCard(card) {
 		const newCard = document.createElement("div");
 		newCard.classList.add("item--card");
@@ -221,17 +215,17 @@ window.addEventListener('DOMContentLoaded', () => {
 		newCard.innerHTML = `
     <div class="item--info">
         <div class="info--public">
-            <div class="item--name adds"><p>${card.name}</p></div>
-            <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
-            <div class="item--foto adds"><img src="${card.imgsrc || card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
-            <div class="item--about adds">
+            <div class="item--name"><p>${card.name}</p></div>
+            <div class="item--price"><p>${card.price} <img src="./icon/g1.png" alt="Валюта"></p></div>
+            <div class="item--photo"><img src="${card.imgSrc || '/path/to/placeholder.jpg'}" alt="${card.name}"></div>
+            <div class="item--about">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
             </div>
-            <div class="item--availability adds">${card.availability}</div>
+            <div class="item--availability">${card.availability}</div>
             <div class="item--korzina">
-                <button type="button" class="korz--btn">
-                  <a href="corzina.html"><img src="./icon/k2.png" alt="Корзина"></a>  
+                <button type="button" class="korz--btn" onclick="window.location.href='corzina.html'">
+                    <img src="./icon/k2.png" alt="Корзина">
                 </button>
             </div>
         </div>
@@ -243,16 +237,19 @@ window.addEventListener('DOMContentLoaded', () => {
     </div>
     `;
 
+		const img = newCard.querySelector('.item--photo img');
+		img.addEventListener('error', () => {
+			img.src = '/path/to/placeholder.jpg';
+		});
+
 		cardsContainer.appendChild(newCard);
 
-		// Кнопка "О товаре"
 		const abButton = newCard.querySelector(".ab");
 		const description = newCard.querySelector(".description");
 		abButton.addEventListener("click", () => {
 			description.style.display = description.style.display === "flex" ? "none" : "flex";
 		});
 
-		// Удаление карточки
 		const delButton = newCard.querySelector(".del");
 		delButton.addEventListener("click", async () => {
 			if (confirm("Удалить этот товар?")) {
@@ -265,7 +262,6 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 
-		// Кнопка "Статус"
 		const statButton = newCard.querySelector(".stat");
 		const availabilityElement = newCard.querySelector(".item--availability");
 		statButton.addEventListener("click", async () => {
@@ -280,9 +276,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// =======================================
 	// Загрузка всех карточек при старте
-	// =======================================
 	async function loadAllCards() {
 		try {
 			console.log("🔄 Загрузка карточек...");
@@ -302,9 +296,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// =======================================
 	// Добавление новой карточки
-	// =======================================
 	form.addEventListener("submit", async (event) => {
 		event.preventDefault();
 
@@ -322,6 +314,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 			if (!name || !price) {
 				alert("Заполните название и цену!");
+				return;
+			}
+
+			if (isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+				alert("Цена должна быть положительным числом!");
 				return;
 			}
 
@@ -351,16 +348,13 @@ window.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
-	// =======================================
 	// Инициализация при загрузке страницы
-	// =======================================
 	document.addEventListener('DOMContentLoaded', () => {
 		console.log("🚀 Приложение запускается...");
 		loadAllCards();
 	});
 
 	console.log("✨ Frontend JavaScript загружен!");
-
 
 
 
