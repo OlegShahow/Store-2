@@ -127,6 +127,8 @@ window.addEventListener('DOMContentLoaded', () => {
 					throw new Error("Файл должен быть изображением");
 				}
 				formData.append('photo', cardData.photoFile);
+			} else {
+				throw new Error("Фото обязательно для загрузки");
 			}
 
 			const controller = new AbortController();
@@ -152,6 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 			const result = await response.json();
 			console.log("✅ Карточка добавлена, ID:", result.id);
+			console.log("🔍 imgSrc:", result.imgSrc); // Отладка
 			return result;
 
 		} catch (err) {
@@ -208,6 +211,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// Функция рендера одной карточки
 	function renderCard(card) {
+		console.log("🔍 Рендеринг карточки, imgSrc:", card.imgSrc); // Отладка
 		const newCard = document.createElement("div");
 		newCard.classList.add("item--card");
 		newCard.dataset.id = card.id;
@@ -217,7 +221,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <div class="info--public">
             <div class="item--name"><p>${card.name}</p></div>
             <div class="item--price"><p>${card.price} <img src="./icon/g1.png" alt="Валюта"></p></div>
-            <div class="item--photo"><img src="${card.imgSrc || '/path/to/placeholder.jpg'}" alt="${card.name}"></div>
+            <div class="item--photo"><img src="${card.imgSrc || 'https://via.placeholder.com/150'}" alt="${card.name}"></div>
             <div class="item--about">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
@@ -239,7 +243,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		const img = newCard.querySelector('.item--photo img');
 		img.addEventListener('error', () => {
-			img.src = '/path/to/placeholder.jpg';
+			if (img.src !== 'https://via.placeholder.com/150') {
+				img.src = 'https://via.placeholder.com/150';
+			} else {
+				img.style.display = 'none'; // Если placeholder тоже не загрузился
+			}
 		});
 
 		cardsContainer.appendChild(newCard);
@@ -355,8 +363,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	console.log("✨ Frontend JavaScript загружен!");
-
-
 
 
 
