@@ -1,6 +1,5 @@
 const express = require("express");
 const path = require("path");
-const { Pool } = require("pg");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
@@ -9,6 +8,22 @@ const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// =======================================
+// Модель Mongoose для карточек
+// =======================================
+const cardSchema = new mongoose.Schema({
+	name: { type: String, required: true },
+	price: { type: String, required: true },
+	description: String,
+	availability: { type: String, default: 'В наличии' },
+	imgSrc: String,
+	date: { type: String, default: () => new Date().toISOString().split('T')[0] }
+}, {
+	timestamps: true
+});
+
+const Card = mongoose.model('Card', cardSchema);
 
 // =======================================
 // Настройка Cloudinary
@@ -48,34 +63,6 @@ const upload = multer({
 });
 
 // =======================================
-// Подключение к PostgreSQL (Render)
-// =======================================
-const pool = new Pool({
-	connectionString: process.env.DATABASE_URL,
-	ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-	idleTimeoutMillis: 30000,
-	connectionTimeoutMillis: 5000,
-});
-
-// Функция для проверки подключения к PostgreSQL
-async function checkPostgreSQLConnection() {
-	let retries = 5;
-	while (retries > 0) {
-		try {
-			const client = await pool.connect();
-			console.log("✅ Подключение к PostgreSQL успешно");
-			client.release();
-			return true;
-		} catch (err) {
-			console.error(`❌ Ошибка подключения к PostgreSQL (попыток left: ${retries}):`, err.message);
-			retries -= 1;
-			await new Promise(resolve => setTimeout(resolve, 5000));
-		}
-	}
-	throw new Error("Не удалось подключиться к PostgreSQL после нескольких попыток");
-}
-
-// =======================================
 // Подключение к MongoDB
 // =======================================
 async function connectMongoDB() {
@@ -84,15 +71,7 @@ async function connectMongoDB() {
 			throw new Error("MONGODB_URI не указан в переменных окружения");
 		}
 
-		// Настройки подключения
-		const mongooseOptions = {
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
-			serverSelectionTimeoutMS: 5000,
-			socketTimeoutMS: 45000,
-		};
-
-		await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+		await mongoose.connect(process.env.MONGODB_URI);
 		console.log("✅ Подключение к MongoDB успешно");
 		console.log(`   База данных: ${mongoose.connection.db?.databaseName}`);
 
@@ -126,55 +105,25 @@ app.use((error, req, res, next) => {
 });
 
 // =======================================
-// Создание таблицы cards (если её нет)
-// =======================================
-async function initializeDatabase() {
-	try {
-		await pool.query(`
-      CREATE TABLE IF NOT EXISTS cards (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        price TEXT NOT NULL,
-        description TEXT,
-        availability TEXT DEFAULT 'В наличии',
-        imgSrc TEXT,
-        date TEXT DEFAULT TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD'),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-		await pool.query(`
-      CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
-    `);
-
-		console.log("✅ Таблица cards инициализирована");
-	} catch (err) {
-		console.error("❌ Ошибка при инициализации таблицы:", err);
-		throw err;
-	}
-}
-
-// =======================================
-// API для карточек
+// API для карточек (MongoDB)
 // =======================================
 
 // Получение всех карточек
 app.get("/api/cards", async (req, res) => {
 	try {
-		console.log("📥 Запрос на получение всех карточек");
-		const { rows } = await pool.query("SELECT * FROM cards ORDER BY created_at DESC");
-		console.log(`✅ Отправлено ${rows.length} карточек`);
-		res.json(rows);
+		console.log("📥 Запрос на получение всех карточек из MongoDB");
+		const cards = await Card.find().sort({ createdAt: -1 });
+		console.log(`✅ Отправлено ${cards.length} карточек из MongoDB`);
+		res.json(cards);
 	} catch (err) {
-		console.error("❌ Ошибка при получении карточек:", err);
+		console.error("❌ Ошибка при получении карточек из MongoDB:", err);
 		res.status(500).json({ error: "Ошибка при получении карточек" });
 	}
 });
 
 // Добавление ОДНОЙ карточки
 app.post("/api/cards", upload.single('photo'), async (req, res) => {
-	console.log("📦 Получен запрос на добавление карточки");
+	console.log("📦 Получен запрос на добавление карточки в MongoDB");
 
 	try {
 		const { name, price, description, availability } = req.body;
@@ -190,27 +139,21 @@ app.post("/api/cards", upload.single('photo'), async (req, res) => {
 			console.log("✅ Фото загружено на Cloudinary:", imageUrl);
 		}
 
-		const result = await pool.query(
-			`INSERT INTO cards (name, price, description, availability, imgSrc, date) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING *`,
-			[
-				name.toString().trim(),
-				price.toString().trim(),
-				(description || '').toString().trim(),
-				(availability || 'В наличии').toString().trim(),
-				imageUrl,
-				new Date().toISOString().split('T')[0]
-			]
-		);
+		// Сохраняем в MongoDB!
+		const newCard = new Card({
+			name: name.toString().trim(),
+			price: price.toString().trim(),
+			description: (description || '').toString().trim(),
+			availability: (availability || 'В наличии').toString().trim(),
+			imgSrc: imageUrl
+		});
 
-		const newCard = result.rows[0];
-		console.log("✅ Карточка добавлена в БД, ID:", newCard.id);
+		await newCard.save();
+		console.log("✅ Карточка добавлена в MongoDB, ID:", newCard._id);
 
 		res.status(201).json(newCard);
-
 	} catch (err) {
-		console.error("❌ Ошибка при добавлении карточки:", err);
+		console.error("❌ Ошибка при добавлении карточки в MongoDB:", err);
 		res.status(500).json({ error: "Ошибка при добавлении карточки" });
 	}
 });
@@ -220,12 +163,13 @@ app.delete("/api/cards/:id", async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const result = await pool.query(
-			"DELETE FROM cards WHERE id = $1 RETURNING *",
-			[id]
-		);
+		if (!mongoose.Types.ObjectId.isValid(id)) {
+			return res.status(400).json({ error: "Неверный ID карточки" });
+		}
 
-		if (result.rows.length === 0) {
+		const deletedCard = await Card.findByIdAndDelete(id);
+
+		if (!deletedCard) {
 			return res.status(404).json({ error: "Карточка не найдена" });
 		}
 
@@ -233,7 +177,7 @@ app.delete("/api/cards/:id", async (req, res) => {
 		res.json({ status: "deleted", id: id });
 
 	} catch (err) {
-		console.error("❌ Ошибка при удалении карточки:", err);
+		console.error("❌ Ошибка при удалении карточки из MongoDB:", err);
 		res.status(500).json({ error: "Ошибка при удалении карточки" });
 	}
 });
@@ -244,23 +188,31 @@ app.put("/api/cards/:id", async (req, res) => {
 	const { name, price, description, availability } = req.body;
 
 	try {
-		const result = await pool.query(
-			`UPDATE cards 
-       SET name = $1, price = $2, description = $3, availability = $4, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $5 
-       RETURNING *`,
-			[name, price, description, availability, id]
+		if (!mongoose.Types.ObjectId.isValid(id)) {
+			return res.status(400).json({ error: "Неверный ID карточки" });
+		}
+
+		const updatedCard = await Card.findByIdAndUpdate(
+			id,
+			{
+				name,
+				price,
+				description,
+				availability,
+				updatedAt: new Date()
+			},
+			{ new: true, runValidators: true }
 		);
 
-		if (result.rows.length === 0) {
+		if (!updatedCard) {
 			return res.status(404).json({ error: "Карточка не найдена" });
 		}
 
 		console.log(`✏️ Обновлена карточка ID: ${id}`);
-		res.json(result.rows[0]);
+		res.json(updatedCard);
 
 	} catch (err) {
-		console.error("❌ Ошибка при обновлении карточки:", err);
+		console.error("❌ Ошибка при обновлении карточки в MongoDB:", err);
 		res.status(500).json({ error: "Ошибка при обновлении карточки" });
 	}
 });
@@ -270,19 +222,20 @@ app.get("/api/cards/:id", async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const result = await pool.query(
-			"SELECT * FROM cards WHERE id = $1",
-			[id]
-		);
+		if (!mongoose.Types.ObjectId.isValid(id)) {
+			return res.status(400).json({ error: "Неверный ID карточки" });
+		}
 
-		if (result.rows.length === 0) {
+		const card = await Card.findById(id);
+
+		if (!card) {
 			return res.status(404).json({ error: "Карточка не найдена" });
 		}
 
-		res.json(result.rows[0]);
+		res.json(card);
 
 	} catch (err) {
-		console.error("❌ Ошибка при получении карточки:", err);
+		console.error("❌ Ошибка при получении карточки из MongoDB:", err);
 		res.status(500).json({ error: "Ошибка при получении карточки" });
 	}
 });
@@ -322,15 +275,11 @@ app.post("/api/upload", upload.single("photo"), async (req, res) => {
 // =======================================
 app.get("/api/health", async (req, res) => {
 	try {
-		// Проверяем PostgreSQL
-		await pool.query("SELECT 1");
-
 		// Проверяем MongoDB
 		await mongoose.connection.db.admin().ping();
 
 		res.json({
 			status: "OK",
-			postgresql: "connected",
 			mongodb: "connected",
 			timestamp: new Date().toISOString()
 		});
@@ -367,14 +316,10 @@ app.use((err, req, res, next) => {
 // =======================================
 async function startServer() {
 	try {
-		// Ждем подключения к БД
-		await checkPostgreSQLConnection();
-
 		// Подключаемся к MongoDB
 		await connectMongoDB();
 
-		// Инициализируем таблицы
-		await initializeDatabase();
+		console.log("✅ MongoDB подключена и готова к работе");
 
 		// Запускаем сервер
 		app.listen(PORT, '0.0.0.0', () => {
@@ -395,10 +340,6 @@ async function gracefulShutdown() {
 	console.log('\n🔻 Завершение работы сервера...');
 
 	try {
-		// Закрываем PostgreSQL
-		await pool.end();
-		console.log('✅ Подключение к PostgreSQL закрыто');
-
 		// Закрываем MongoDB
 		await mongoose.connection.close();
 		console.log('✅ Подключение к MongoDB закрыто');
