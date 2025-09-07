@@ -1,8 +1,7 @@
-
-
 const express = require("express");
 const path = require("path");
 const { Pool } = require("pg");
+const mongoose = require("mongoose");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -58,8 +57,8 @@ const pool = new Pool({
 	connectionTimeoutMillis: 5000,
 });
 
-// Функция для проверки подключения к БД
-async function checkDatabaseConnection() {
+// Функция для проверки подключения к PostgreSQL
+async function checkPostgreSQLConnection() {
 	let retries = 5;
 	while (retries > 0) {
 		try {
@@ -70,10 +69,37 @@ async function checkDatabaseConnection() {
 		} catch (err) {
 			console.error(`❌ Ошибка подключения к PostgreSQL (попыток left: ${retries}):`, err.message);
 			retries -= 1;
-			await new Promise(resolve => setTimeout(resolve, 5000)); // Ждем 5 секунд
+			await new Promise(resolve => setTimeout(resolve, 5000));
 		}
 	}
 	throw new Error("Не удалось подключиться к PostgreSQL после нескольких попыток");
+}
+
+// =======================================
+// Подключение к MongoDB
+// =======================================
+async function connectMongoDB() {
+	try {
+		if (!process.env.MONGODB_URI) {
+			throw new Error("MONGODB_URI не указан в переменных окружения");
+		}
+
+		// Настройки подключения
+		const mongooseOptions = {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+			serverSelectionTimeoutMS: 5000,
+			socketTimeoutMS: 45000,
+		};
+
+		await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
+		console.log("✅ Подключение к MongoDB успешно");
+		console.log(`   База данных: ${mongoose.connection.db?.databaseName}`);
+
+	} catch (err) {
+		console.error("❌ Ошибка подключения к MongoDB:", err.message);
+		throw err;
+	}
 }
 
 // =======================================
@@ -118,7 +144,6 @@ async function initializeDatabase() {
       )
     `);
 
-		// Создаем индекс для быстрого поиска
 		await pool.query(`
       CREATE INDEX IF NOT EXISTS idx_cards_name ON cards(name);
     `);
@@ -154,20 +179,17 @@ app.post("/api/cards", upload.single('photo'), async (req, res) => {
 	try {
 		const { name, price, description, availability } = req.body;
 
-		// Валидация обязательных полей
 		if (!name || !price) {
 			return res.status(400).json({ error: "Название и цена обязательны" });
 		}
 
 		let imageUrl = '';
 
-		// Обработка загруженного файла
 		if (req.file) {
 			imageUrl = req.file.path;
 			console.log("✅ Фото загружено на Cloudinary:", imageUrl);
 		}
 
-		// Вставка карточки в БД
 		const result = await pool.query(
 			`INSERT INTO cards (name, price, description, availability, imgSrc, date) 
        VALUES ($1, $2, $3, $4, $5, $6) 
@@ -300,17 +322,23 @@ app.post("/api/upload", upload.single("photo"), async (req, res) => {
 // =======================================
 app.get("/api/health", async (req, res) => {
 	try {
+		// Проверяем PostgreSQL
 		await pool.query("SELECT 1");
+
+		// Проверяем MongoDB
+		await mongoose.connection.db.admin().ping();
+
 		res.json({
 			status: "OK",
-			database: "connected",
+			postgresql: "connected",
+			mongodb: "connected",
 			timestamp: new Date().toISOString()
 		});
 	} catch (err) {
 		res.status(500).json({
 			status: "ERROR",
-			database: "disconnected",
-			error: err.message
+			error: err.message,
+			timestamp: new Date().toISOString()
 		});
 	}
 });
@@ -340,13 +368,16 @@ app.use((err, req, res, next) => {
 async function startServer() {
 	try {
 		// Ждем подключения к БД
-		await checkDatabaseConnection();
+		await checkPostgreSQLConnection();
+
+		// Подключаемся к MongoDB
+		await connectMongoDB();
 
 		// Инициализируем таблицы
 		await initializeDatabase();
 
 		// Запускаем сервер
-		app.listen(PORT, () => {
+		app.listen(PORT, '0.0.0.0', () => {
 			console.log(`🚀 Сервер запущен на порту ${PORT}`);
 			console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
 		});
@@ -357,20 +388,30 @@ async function startServer() {
 	}
 }
 
-// Обработка graceful shutdown
-process.on('SIGINT', async () => {
+// =======================================
+// Graceful shutdown
+// =======================================
+async function gracefulShutdown() {
 	console.log('\n🔻 Завершение работы сервера...');
-	await pool.end();
-	console.log('✅ Подключение к БД закрыто');
-	process.exit(0);
-});
 
-process.on('SIGTERM', async () => {
-	console.log('\n🔻 Получен SIGTERM, завершение работы...');
-	await pool.end();
-	console.log('✅ Подключение к БД закрыто');
-	process.exit(0);
-});
+	try {
+		// Закрываем PostgreSQL
+		await pool.end();
+		console.log('✅ Подключение к PostgreSQL закрыто');
+
+		// Закрываем MongoDB
+		await mongoose.connection.close();
+		console.log('✅ Подключение к MongoDB закрыто');
+
+		process.exit(0);
+	} catch (err) {
+		console.error('❌ Ошибка при завершении работы:', err);
+		process.exit(1);
+	}
+}
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 // Запускаем сервер
 startServer();
