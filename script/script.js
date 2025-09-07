@@ -363,7 +363,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	console.log("✨ Frontend JavaScript загружен!");
 
-
+	// =======================================
+	// ДЕЛАЕМ ФУНКЦИИ ГЛОБАЛЬНЫМИ ДЛЯ ОТЛАДКИ
+	// =======================================
+	window.loadAllCards = loadAllCards;
+	window.getCards = getCards;
+	window.renderCard = renderCard;
+	window.addCard = addCard;
+	window.deleteCard = deleteCard;
 	// ..........................................................................................................
 
 
