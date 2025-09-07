@@ -151,7 +151,7 @@ window.addEventListener('DOMContentLoaded', () => {
 			}
 
 			const result = await response.json();
-			console.log("✅ Карточка добавлена, ID:", result.id);
+			console.log("✅ Карточка добавлена, ID:", result.id || result._id);
 			return result;
 
 		} catch (err) {
@@ -214,16 +214,17 @@ window.addEventListener('DOMContentLoaded', () => {
 	// Функция рендера одной карточки
 	// =======================================
 	function renderCard(card) {
+		const cardId = card.id || card._id; // Поддержка и id и _id
 		const newCard = document.createElement("div");
 		newCard.classList.add("item--card");
-		newCard.dataset.id = card.id;
+		newCard.dataset.id = cardId;
 
 		newCard.innerHTML = `
     <div class="item--info">
         <div class="info--public">
             <div class="item--name adds"><p>${card.name}</p></div>
             <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
-            <div class="item--foto adds"><img src="${card.imgsrc || card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
+            <div class="item--foto adds"><img src="${card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
             <div class="item--about adds">
                 <button class="ab">О товаре</button>
                 <div class="description"><p>${card.description || ""}</p></div>
@@ -257,7 +258,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		delButton.addEventListener("click", async () => {
 			if (confirm("Удалить этот товар?")) {
 				try {
-					await deleteCard(card.id);
+					await deleteCard(cardId);
 					newCard.remove();
 				} catch (err) {
 					alert(err.message);
@@ -271,7 +272,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		statButton.addEventListener("click", async () => {
 			try {
 				const newStatus = card.availability === "В наличии" ? "Нет в наличии" : "В наличии";
-				await updateCardStatus(card.id, newStatus);
+				await updateCardStatus(cardId, newStatus);
 				availabilityElement.textContent = newStatus;
 				card.availability = newStatus;
 			} catch (err) {
@@ -287,6 +288,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		try {
 			console.log("🔄 Загрузка карточек...");
 			const cards = await getCards();
+			console.log("📦 Полученные карточки:", cards); // Для отладки
 			cardsContainer.innerHTML = '';
 
 			if (cards.length === 0) {
@@ -360,7 +362,6 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	console.log("✨ Frontend JavaScript загружен!");
-
 
 
 	// ..........................................................................................................
