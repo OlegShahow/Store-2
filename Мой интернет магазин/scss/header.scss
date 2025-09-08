@@ -1,0 +1,116 @@
+@function toRem($value) {
+	$baseFontSize: 16;
+	@return ($value/$baseFontSize) * 1rem;
+}
+
+.header {
+	// border: 1px solid white;
+	width: 100vw;
+	height: auto;
+	padding: toRem(10) toRem(50);
+	&__nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-around;
+	}
+	&__nav--admin {
+		position: relative;
+		display: inline-block;
+		display: flex;
+
+		& button {
+			width: toRem(150);
+			height: toRem(50);
+			padding: toRem(10);
+
+			clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%);
+			color: white;
+			font-size: toRem(24);
+			background-color: rgba(0, 128, 0, 0);
+			box-shadow: 0px 0px 12px gold inset;
+			transition: 0.5s ease-in-out;
+
+			&:hover {
+				clip-path: polygon(0% 0%, 80% 0%, 100% 100%, 20% 100%);
+			}
+
+			// нужно завязаться на сам тег button
+			&:hover + .admin--info {
+				display: block;
+				z-index: 999;
+			}
+		}
+	}
+	&__nav--form {
+		opacity: 0;
+
+		& button {
+			padding: toRem(10);
+			font-size: toRem(24);
+			background-color: rgba(0, 128, 0, 0);
+			color: white;
+			border-radius: toRem(10);
+		}
+		& .enter {
+			margin: 0 toRem(20);
+			box-shadow: 0px 0px 12px gold inset;
+			&:hover {
+				box-shadow: 0px 0px 22px gold;
+			}
+		}
+
+		& .off--admin {
+			box-shadow: 0px 0px 22px rgb(233, 8, 8) inset;
+			border: 0px 0px solid red;
+			&:hover {
+				box-shadow: 0px 0px 42px rgb(233, 8, 8);
+			}
+		}
+		& label {
+			font-size: toRem(24);
+			color: white;
+		}
+		& input {
+			width: toRem(100);
+			padding: toRem(10);
+			font-size: toRem(24);
+			border-radius: toRem(10);
+			&:hover {
+				background-color: rgb(172, 178, 172);
+			}
+		}
+	}
+	&__nav--nav {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		// justify-content: space-between;
+
+		& a {
+			color: white;
+			font-size: toRem(24);
+		}
+	}
+}
+.admin--info {
+	display: none;
+	position: absolute;
+	top: -200%;
+	left: 0;
+	width: 300%;
+	padding: toRem(10);
+	background-color: rgb(247, 251, 247);
+
+	& p {
+		font-size: toRem(24);
+	}
+}
+.header__nav--korz {
+	width: toRem(50);
+	background-color: white;
+	padding: toRem(10);
+	border-radius: 50%;
+	& img {
+		width: 100%;
+	}
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+	<meta name="viewport" content="width=device-width , initial-scale = 1.0 , maximum-scale = 1.0 , user-scalable = 0">
+
+	<link rel="stylesheet" href="css/style.css">
+
+
+	<title>Document</title>
+</head>
+
+<body>
+	<div class="wrapper">
+
+		<header class="header">
+
+			<div class="header__container">
+				<div class="header__nav--nav">
+					<a href="tel:+79991234567">+3 (000) 123-45-67</a>
+					<a href="mailto:info@example.com">info@example.com</a>
+					<div class="header__nav--korz"><a><img src="./icon/korzina.svg"></a></div>
+				</div>
+
+			</div>
+		</header>
+
+		<div class="olx">
+			<div class="olx__container">
+				<h1><span>М</span>ои товары на <span> ОЛХ </span></h1>
+			</div>
+
+		</div>
+
+		<main class="main">
+
+			<div class="main__container">
+				<div class="main__cards">
+					<div class="item--card">
+						<div class="item--info">
+							<div class="info--public">
+								<div class="item--name">
+									<p>Столик под дерево</p>
+								</div>
+								<div class="item--prize">
+									<p>600 <img src="./icon/g1.png" alt="@"></p>
+								</div>
+								<div class="item--foto"><img src="./img/tree1.jpg" alt="@"></div>
+								<div class="item--about">
+									<button class="ab">О товаре</button>
+									<div class="description">
+										<p>Материал - ДСП <br> Высота - 54 см <br> Столешница <br> 40 см х 40 см</p>
+									</div>
+								</div>
+								<div class="item--availability">В наличии</div>
+							</div>
+							<div class="info--admin">
+								<div class="admin--delite"><button class="del">Удалить товар</button></div>
+								<div class="admin--status"><button class="stat">Статус</button></div>
+							</div>
+						</div>
+					</div>
+
+
+				</div>
+			</div>
+
+		</main>
+
+
+		<footer class="footer">
+			<div class="footer__container">
+
+				<div class="panel">
+					<h2>Админ панель </h2>
+					<div class="panel__admin">
+						<div class="header__nav">
+							<div class="header__nav--admin">
+								<button>АДМИН</button>
+								<div class="admin--info">
+									<p>В режиме админа доступны действия :</p>
+									<p>- добавление \ удаление товара</p>
+									<p>- управление наличием товара</p>
+								</div>
+							</div>
+							<div class="header__nav--form">
+								<form>
+									<label>Введите пароль : </label>
+									<input type="password">
+									<button class="enter" type="submit">Enter</button>
+									<button class="off--admin">Выйти из режима "Админ"</button>
+								</form>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+
+
+				
+				<div class="form__block">
+					<form id="add-card-form" class="footer__add--box">
+						<div class="form__block--body">
+							<div class="add--name adds">
+								<label for="name">Введите название товара</label>
+								<input type="text" id="name" name="name" required>
+							</div>
+
+							<div class="add--prize adds">
+								<label for="price">Введите стоимость товара</label>
+								<input type="number" id="price" name="price" required>
+							</div>
+
+							<!-- <div class="add--foto adds">
+								<label>Выберите фото товара</label>
+								<input type="file" name="img" accept="image/*" required>
+							</div> -->
+
+
+							<!-- сюда вставляем поле для ссылки на картинку -->
+							<div class="add--foto adds">
+								<label>Ссылка на изображение</label>
+								<input type="text" name="imgUrl" placeholder="Вставьте URL картинки">
+							</div>
+
+
+							<div class="add--about adds">
+								<label for="desc">Введите описание товара</label>
+								<textarea id="desc" name="desc" rows="3"></textarea>
+							</div>
+
+							<div class="add--availability adds">
+								<label for="availability">Введите наличие</label>
+								<input type="text" id="availability" name="availability"
+									placeholder="В наличии / Нет в наличии">
+							</div>
+						</div>
+
+
+						<button class="adnbtn" type="submit">Добавить товар</button>
+					</form>
+				</div>
+			</div>
+
+
+
+
+	</div>
+	</div>
+	</footer>
+	</div>
+
+
+	<script src="./script/script.js" defer></script>
+	<script src="./script/adminscript.js" defer></script>
+</body>
+
+</html>

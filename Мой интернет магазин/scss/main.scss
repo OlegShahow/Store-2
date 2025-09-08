@@ -1,0 +1,178 @@
+@function toRem($value) {
+	$baseFontSize: 16;
+	@return ($value/$baseFontSize) * 1rem;
+}
+
+.main {
+	margin-top: toRem(50);
+	&__cards {
+		width: 100%;
+		height: auto;
+		display: flex;
+		flex-direction: column;
+		row-gap: toRem(30);
+
+		// border: 1px solid white;
+	}
+}
+
+.item--name,
+.item--prize,
+.item--foto,
+.item--about,
+.item--availability {
+	width: 20%;
+	display: flex;
+	justify-content: center;
+	// border: 1px solid white;
+}
+
+.item--card {
+	width: 100%;
+	padding: toRem(20) 0;
+	position: relative; // нужно, чтобы псевдоэлемент позиционировался от .item--card
+	// transition: 1s ease-in-out;
+	// когда наводим на карточку (или на её содержимое), поднимаем её над соседями
+	&:hover {
+		background-color: rgba(255, 255, 255, 0.026);
+		z-index: 999;
+	}
+	&::before,
+	&::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		height: 16px; // высота зоны для тени
+		pointer-events: none; // чтобы не перекрывала клики
+	}
+
+	&::before {
+		top: -15px; // тень сверху
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+	}
+
+	&::after {
+		bottom: -15px; // тень снизу
+		box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
+	}
+
+	// border: 1px solid white;
+}
+.item--info {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+.info--public {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+}
+.item--name {
+	& p {
+		font-size: toRem(38);
+		color: white;
+		letter-spacing: 1px;
+		text-shadow: 0px 0px 16px black;
+	}
+}
+.item--prize {
+	& p {
+		font-size: toRem(38);
+		color: white;
+		letter-spacing: 1px;
+		text-shadow: 0px 0px 16px black;
+	}
+	& img {
+		width: toRem(30);
+		background-color: rgb(247, 251, 247);
+		border-radius: 50%;
+	}
+}
+.item--foto {
+	width: toRem(150);
+
+	& img {
+		width: 100%;
+		border-radius: toRem(20);
+		transition: 0.5s ease-in-out;
+		cursor: pointer;
+		position: relative; // чтобы z-index на img работал
+		z-index: 1; // поверх контента внутри карточки
+
+		&:hover {
+			transform: scale(3);
+			z-index: 2;
+		}
+	}
+}
+.item--about {
+	position: relative;
+}
+
+.description {
+	position: absolute;
+	display: none;
+	width: 200%;
+	height: auto;
+	top: toRem(70);
+	left: toRem(-60);
+	padding: toRem(10);
+	background-color: rgb(247, 251, 247);
+	text-align: center;
+	z-index: 999;
+
+	& p {
+		color: black;
+		background-color: white;
+		font-size: toRem(26);
+	}
+}
+.item--availability {
+	font-size: toRem(38);
+	color: white;
+	letter-spacing: 1px;
+	text-shadow: 0px 0px 16px black;
+}
+.info--admin {
+	margin-top: toRem(50);
+	width: 100%;
+	display: none;
+	// display: flex;
+	align-items: center;
+	justify-content: center;
+	column-gap: toRem(20);
+}
+.admin--delite button,
+.admin--status button {
+	padding: toRem(10);
+	font-size: toRem(24);
+	color: white;
+	&:hover {
+		transform: scale(0.9);
+	}
+}
+.del {
+	box-shadow: 0px 0px 26px red inset;
+	background-color: rgba(255, 255, 255, 0);
+}
+
+.stat {
+	background-color: blue;
+}
+
+.ab {
+	font-size: toRem(28);
+	padding: toRem(10);
+	background-color: rgba(255, 255, 255, 0);
+	color: white;
+	box-shadow: 0px 0px 6px gold;
+	border-radius: toRem(10);
+
+	&:hover {
+		// transform: scale(0.9);
+		box-shadow: 0px 0px 16px gold inset;
+	}
+}

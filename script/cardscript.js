@@ -1,8 +1,11 @@
 
 // ............................. Создание динамической карточки .............................................................................
-//  ...........  отправка сайта на сервер !!!!!!!!  
+//  ...........  отправка сайта на сервер !!!!!!!!
 
-//  =======================================
+
+// так же  - добавление карточки в корзину !!!!
+
+// =======================================
 // Находим форму и контейнер для карточек
 // =======================================
 const form = document.getElementById("add-card-form");
@@ -148,6 +151,7 @@ function renderCard(card) {
 	newCard.classList.add("item--card");
 	newCard.dataset.id = cardId;
 
+	// ДОБАВЛЕНО: data-атрибуты для передачи данных в корзину
 	newCard.innerHTML = `
     <div class="item--info">
         <div class="info--public">
@@ -160,8 +164,13 @@ function renderCard(card) {
             </div>
             <div class="item--availability adds">${card.availability}</div>
             <div class="item--korzina">
-                <button type="button" class="korz--btn">
-                  <a href="corzina.html"><img src="./icon/k2.png" alt="Корзина"></a>  
+                <!-- ИЗМЕНЕНО: убрана ссылка, добавлены data-атрибуты -->
+                <button type="button" class="korz--btn" 
+                        data-id="${cardId}" 
+                        data-name="${card.name}" 
+                        data-price="${card.price}" 
+                        data-img="${card.imgSrc}">
+                    <img src="./icon/k2.png" alt="Корзина">
                 </button>
             </div>
         </div>
@@ -207,6 +216,22 @@ function renderCard(card) {
 		} catch (err) {
 			alert(err.message);
 		}
+	});
+
+	// ДОБАВЛЕНО: Обработчик кнопки корзины
+	const korzBtn = newCard.querySelector('.korz--btn');
+	korzBtn.addEventListener('click', function (e) {
+		e.preventDefault();
+		e.stopPropagation(); // Важно: предотвращаем всплытие события
+
+		const productData = {
+			id: this.dataset.id,
+			name: this.dataset.name,
+			price: this.dataset.price,
+			img: this.dataset.img
+		};
+
+		addToCart(productData);
 	});
 }
 
@@ -283,11 +308,118 @@ form.addEventListener("submit", async (event) => {
 });
 
 // =======================================
+// НОВАЯ ФУНКЦИЯ: Добавление товара в корзину
+// =======================================
+function addToCart(productData) {
+	try {
+		console.log("🛒 Добавление в корзину:", productData);
+
+		// Получаем текущую корзину или создаем пустую
+		let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+		// Проверяем, есть ли уже такой товар в корзине
+		const existingItemIndex = cart.findIndex(item => item.id === productData.id);
+
+		if (existingItemIndex > -1) {
+			// Если товар уже есть - увеличиваем количество
+			cart[existingItemIndex].quantity += 1;
+			console.log("➕ Увеличено количество товара в корзине");
+		} else {
+			// Если товара нет - добавляем новый
+			cart.push({
+				id: productData.id,
+				name: productData.name,
+				price: productData.price,
+				img: productData.img,
+				quantity: 1
+			});
+			console.log("✅ Новый товар добавлен в корзину");
+		}
+
+		// Сохраняем обновленную корзину в localStorage
+		localStorage.setItem('cart', JSON.stringify(cart));
+
+		// Показываем уведомление пользователю
+		showCartNotification('Товар добавлен в корзину!');
+
+	} catch (err) {
+		console.error('❌ Ошибка при добавлении в корзину:', err);
+		showCartNotification('Ошибка при добавлении в корзину', 'error');
+	}
+}
+
+// =======================================
+// НОВАЯ ФУНКЦИЯ: Показ уведомлений о корзине
+// =======================================
+function showCartNotification(message, type = 'success') {
+	// Создаем или находим контейнер для уведомлений
+	let notificationContainer = document.getElementById('cart-notifications');
+	if (!notificationContainer) {
+		notificationContainer = document.createElement('div');
+		notificationContainer.id = 'cart-notifications';
+		notificationContainer.style.cssText = `
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			z-index: 10000;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		`;
+		document.body.appendChild(notificationContainer);
+	}
+
+	// Создаем уведомление
+	const notification = document.createElement('div');
+	notification.textContent = message;
+	notification.style.cssText = `
+		background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+		color: white;
+		padding: 12px 20px;
+		border-radius: 6px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+		font-family: Arial, sans-serif;
+		font-size: 14px;
+		opacity: 0;
+		transform: translateX(100%);
+		transition: all 0.3s ease;
+	`;
+
+	notificationContainer.appendChild(notification);
+
+	// Анимация появления
+	setTimeout(() => {
+		notification.style.opacity = '1';
+		notification.style.transform = 'translateX(0)';
+	}, 10);
+
+	// Удаляем через 3 секунды с анимацией
+	setTimeout(() => {
+		notification.style.opacity = '0';
+		notification.style.transform = 'translateX(100%)';
+
+		setTimeout(() => {
+			notification.remove();
+			if (notificationContainer.children.length === 0) {
+				notificationContainer.remove();
+			}
+		}, 300);
+	}, 3000);
+}
+
+// =======================================
 // Инициализация при загрузке страницы
 // =======================================
 document.addEventListener('DOMContentLoaded', () => {
 	console.log("🚀 Приложение запускается...");
 	loadAllCards();
+
+	// ДОБАВЛЕНО: Инициализация корзины при загрузке
+	if (localStorage.getItem('cart')) {
+		console.log("🛒 Корзина загружена из localStorage");
+	} else {
+		console.log("🛒 Корзина пуста");
+	}
 });
 
 console.log("✨ Frontend JavaScript загружен!");
@@ -300,5 +432,6 @@ window.getCards = getCards;
 window.renderCard = renderCard;
 window.addCard = addCard;
 window.deleteCard = deleteCard;
-// ..........................................................................................................
-
+// ДОБАВЛЕНО: Функции для работы с корзиной
+window.addToCart = addToCart;
+window.showCartNotification = showCartNotification;
