@@ -11,17 +11,23 @@
 <body>
 
 	<div class="wrapper">
-
 		<button type="button"><a href="index.html">На главную</a></button>
 		<h1>Ваш выбраный товар</h1>
 		<div class="wrapper__container">
-
 			<div class="cart__container">
-				
+				<!-- Контейнер для товаров -->
+				<div class="cart-items">
+					<!-- Товары будут добавляться сюда динамически -->
+				</div>
 
+				<!-- Блок когда корзина пуста -->
+				<div class="cart-empty" style="display: none;">
+					<p>Корзина пуста</p>
+				</div>
 
+				<!-- Блок итоговой суммы -->
 				<div class="cart-total">
-					Общая сумма: 600 грн
+					Общая сумма: <span class="total-amount">0</span> грн
 				</div>
 
 				<button class="checkout-btn">Оформить заказ</button>
@@ -32,7 +38,7 @@
 
 
 
-	<script src="./script/corzina.js" defer></script>
+	<script src="./script/corzina.js"></script>
 </body>
 
 </html>
