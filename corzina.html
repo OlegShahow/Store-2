@@ -5,6 +5,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
+	<!-- <link rel="stylesheet" href="css/corzina.css"> -->
 	<link rel="stylesheet" href="css/corzina.css">
 </head>
 
@@ -13,26 +14,43 @@
 	<div class="wrapper">
 		<button type="button"><a href="index.html">На главную</a></button>
 		<h1>Ваш выбраный товар</h1>
-		<div class="wrapper__container">
-			<div class="cart__container">
-				<!-- Контейнер для товаров -->
-				<div class="cart-items">
-					<!-- Товары будут добавляться сюда динамически -->
+
+		<div class="cart__container">
+			<!-- Контейнер для товаров -->
+			<div class="cart-items">
+				<!-- Товары будут добавляться сюда динамически -->
+
+
+				<div class="cart-item-info">
+					<div class="cart-item-image">
+						<img src="./img/gaz.jpg  ">
+					</div>
+					<h3>tovar</h3>
+					<p class="item-price">Цена: 600 грн</p>
+					<div class="cart-item-controls">
+						<button class="quantity-btn minus" data-action="minus">-</button>
+						<span class="quantity">2</span>
+						<button class="quantity-btn plus" data-action="plus">+</button>
+						<p class="item-total">Сумма: 600 грн</p>
+						<button class="remove-btn" data-action="remove">Удалить</button>
+					</div>
 				</div>
 
-				<!-- Блок когда корзина пуста -->
-				<div class="cart-empty" style="display: none;">
-					<p>Корзина пуста</p>
-				</div>
-
-				<!-- Блок итоговой суммы -->
-				<div class="cart-total">
-					Общая сумма: <span class="total-amount">0</span> грн
-				</div>
-
-				<button class="checkout-btn">Оформить заказ</button>
 			</div>
+
+			<!-- Блок когда корзина пуста -->
+			<div class="cart-empty" style="display: none;">
+				<p>Корзина пуста</p>
+			</div>
+
+			<!-- Блок итоговой суммы -->
+			<div class="cart-total">
+				<p>Общая сумма: <span class="total-amount">0</span> грн</p>
+			</div>
+
+			<button class="checkout-btn">Оформить заказ</button>
 		</div>
+
 	</div>
 
 
