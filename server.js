@@ -321,10 +321,10 @@ async function startServer() {
 
 		console.log("✅ MongoDB подключена и готова к работе");
 
-		// Запускаем сервер
-		app.listen(PORT, '0.0.0.0', () => {
-			console.log(`🚀 Сервер запущен на порту ${PORT}`);
-			console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+		// Запускаем сервер - ИСПРАВЛЕННАЯ СТРОКА
+		app.listen(process.env.PORT || PORT, '0.0.0.0', () => {
+			console.log(`🚀 Сервер запущен на порту ${process.env.PORT || PORT}`);
+			console.log(`📊 Health check: http://localhost:${process.env.PORT || PORT}/api/health`);
 		});
 
 	} catch (err) {
