@@ -16,6 +16,16 @@
 		<h1>Ваш выбраный товар</h1>
 
 		<div class="cart__container">
+
+			<!-- Скрытая форма для отправки -->
+			<form id="cartForm" action="https://formspree.io/f/xpwjbozp" method="POST" style="display: none;">
+				<input type="hidden" name="total_amount" id="formTotal">
+				<input type="hidden" name="items_count" id="formCount">
+				<!-- Сюда JS добавит данные товаров -->
+			</form>
+
+
+
 			<!-- Контейнер для товаров -->
 			<div class="cart-items">
 				<!-- Товары будут добавляться сюда динамически -->

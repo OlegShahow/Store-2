@@ -152,3 +152,84 @@ document.querySelector('.clear-corzina').addEventListener('click', () => {
 		alert('Корзина очищена!');
 	}
 });
+
+
+// ................................    отправка формы из корзины ..................
+
+
+// =======================================
+// ФУНКЦИЯ ОТПРАВКИ ДАННЫХ КОРЗИНЫ
+// =======================================
+function sendCartData() {
+	const cartItems = document.querySelectorAll('.cart-item');
+	const form = document.getElementById('cartForm');
+
+	// Очищаем форму от предыдущих данных
+	const existingInputs = form.querySelectorAll('[name^="product_"]');
+	existingInputs.forEach(input => input.remove());
+
+	// Добавляем общие данные
+	document.getElementById('formTotal').value = document.querySelector('.total-amount').textContent + ' грн';
+	document.getElementById('formCount').value = cartItems.length + ' шт.';
+
+	// Добавляем данные каждого товара
+	cartItems.forEach((item, index) => {
+		const name = item.querySelector('h3')?.textContent || 'Без названия';
+		const price = item.querySelector('.item-price')?.textContent.replace('Цена: ', '') || '0 грн';
+		const quantity = item.querySelector('.quantity')?.textContent || '1';
+		const total = item.querySelector('.item-total')?.textContent.replace('Сумма: ', '') || '0 грн';
+
+		// Создаем скрытые поля для каждого товара
+		createHiddenInput(form, `product_${index}_name`, name);
+		createHiddenInput(form, `product_${index}_price`, price);
+		createHiddenInput(form, `product_${index}_quantity`, quantity);
+		createHiddenInput(form, `product_${index}_total`, total);
+	});
+
+	// Отправляем форму
+	fetch(form.action, {
+		method: 'POST',
+		body: new FormData(form),
+		headers: {
+			'Accept': 'application/json'
+		}
+	})
+		.then(response => response.json())
+		.then(data => {
+			console.log('✅ Данные корзины отправлены:', data);
+			alert('Заказ оформлен! Данные отправлены.');
+		})
+		.catch(error => {
+			console.error('❌ Ошибка отправки:', error);
+			alert('Ошибка отправки заказа. Попробуйте еще раз.');
+		});
+}
+
+// Вспомогательная функция для создания скрытых полей
+function createHiddenInput(form, name, value) {
+	const input = document.createElement('input');
+	input.type = 'hidden';
+	input.name = name;
+	input.value = value;
+	form.appendChild(input);
+}
+
+// =======================================
+// ОБРАБОТЧИК КНОПКИ ОФОРМЛЕНИЯ ЗАКАЗА
+// =======================================
+document.querySelector('.checkout-btn').addEventListener('click', function () {
+	const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+	if (cart.length === 0) {
+		alert('Корзина пуста!');
+		return;
+	}
+
+	if (confirm(`Оформить заказ на сумму ${document.querySelector('.total-amount').textContent} грн?`)) {
+		sendCartData(); // Отправляем данные корзины
+
+		// Очищаем корзину после отправки
+		localStorage.removeItem('cart');
+		loadCart();
+	}
+});
