@@ -133,7 +133,16 @@ body {
 }
 
 .cart__container {
-  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
   width: 100%;
   height: auto;
 }
@@ -241,9 +250,7 @@ body {
 }
 
 button + .clear-corzina {
-  position: fixed;
-  bottom: 5%;
-  right: 5%;
+  margin-top: 6.25rem;
   background-color: rgba(255, 255, 255, 0);
   color: white;
   font-size: 1.875rem;
