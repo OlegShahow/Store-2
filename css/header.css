@@ -131,6 +131,7 @@
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
+  z-index: 999999999;
 }
 .header__nav--korz img {
   width: 100%;

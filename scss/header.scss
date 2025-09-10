@@ -125,6 +125,7 @@
 		&:hover {
 			+ div {
 				display: flex;
+				z-index: 999999999;
 			}
 		}
 	}
