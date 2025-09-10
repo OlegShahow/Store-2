@@ -133,6 +133,7 @@ body {
 }
 
 .cart__container {
+  position: relative;
   width: 100%;
   height: auto;
 }
@@ -237,4 +238,19 @@ body {
   font-size: 1.875rem;
   color: white;
   margin: 0 1.875rem;
+}
+
+button + .clear-corzina {
+  position: fixed;
+  bottom: 5%;
+  right: 5%;
+  background-color: rgba(255, 255, 255, 0);
+  color: white;
+  font-size: 1.875rem;
+  -webkit-box-shadow: 0px 0px 36px red inset;
+          box-shadow: 0px 0px 36px red inset;
+}
+button + .clear-corzina:hover {
+  -webkit-box-shadow: 0px 0px 36px red, 0px 0px 36px red inset;
+          box-shadow: 0px 0px 36px red, 0px 0px 36px red inset;
 }

@@ -64,6 +64,8 @@ body {
 }
 .cart {
 	&__container {
+		//  position: relative;  ждя кнопки очистки корзины
+		position: relative;
 		width: 100%;
 		height: auto;
 	}
@@ -104,7 +106,7 @@ body {
 	color: white;
 }
 
-.cart-item-controls{
+.cart-item-controls {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -148,8 +150,23 @@ body {
 	border: none;
 	border-radius: 5px;
 }
-.item-total{
+.item-total {
 	font-size: toRem(30);
 	color: white;
-	margin:0 toRem(30) ;
+	margin: 0 toRem(30);
+}
+button + .clear-corzina {
+	position: fixed;
+	bottom: 5%;
+	right: 5%;
+	background-color: rgba(255, 255, 255, 0);
+	color: white;
+	font-size: toRem(30);
+	box-shadow: 0px 0px 36px red inset;
+
+	&:hover {
+		box-shadow:
+			0px 0px 36px red,
+			0px 0px 36px red inset;
+	}
 }

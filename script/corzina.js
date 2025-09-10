@@ -203,10 +203,10 @@ window.addEventListener('DOMContentLoaded', () => {
 		// Добавляем на страницу
 		document.body.appendChild(notification);
 
-		// Удаляем через 3 секунды
+		// Удаляем через 5 секунды
 		setTimeout(() => {
 			notification.remove();
-		}, 3000);
+		}, 5000);
 	}
 
 	// =======================================

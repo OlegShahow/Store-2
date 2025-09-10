@@ -14,6 +14,8 @@
   text-align: center;
 }
 .panel h2 {
+  font-family: "My3";
+  letter-spacing: 5px;
   color: white;
   font-size: 3.125rem;
 }

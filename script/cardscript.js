@@ -393,7 +393,7 @@ function showCartNotification(message, type = 'success') {
 		notification.style.transform = 'translateX(0)';
 	}, 10);
 
-	// Удаляем через 3 секунды с анимацией
+	// Удаляем через 5 секунды с анимацией
 	setTimeout(() => {
 		notification.style.opacity = '0';
 		notification.style.transform = 'translateX(100%)';
@@ -404,7 +404,7 @@ function showCartNotification(message, type = 'success') {
 				notificationContainer.remove();
 			}
 		}, 300);
-	}, 3000);
+	}, 5000);
 }
 
 // =======================================

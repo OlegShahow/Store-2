@@ -110,6 +110,10 @@ h6 {
   font-family: "My2";
   src: url("../fonts/Contry.ttf");
 }
+@font-face {
+  font-family: "My3";
+  src: url("../fonts/SanghaKali-Regular.otf");
+}
 [class*=__container] {
   max-width: 1680px;
   padding: 0 20px;
