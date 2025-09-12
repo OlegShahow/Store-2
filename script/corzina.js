@@ -291,7 +291,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		});
 
 		// Отправляем данные
-		fetch('https://formspree.io/f/xpwjbozp', {
+		fetch('https://formspree.io/f/xnnbrpyo', {
 			method: 'POST',
 			body: formData,
 			headers: {
