@@ -170,8 +170,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		// Подтверждение оформления заказа
 		if (confirm(`Оформить заказ на сумму ${totalAmount} грн?`)) {
-			// Здесь будет логика отправки заказа на сервер
-			console.log('✅ Заказ оформлен:', cart);
+			// ДОБАВЛЯЕМ ОТПРАВКУ В FORMSPREE ↓
+			sendOrderToFormspree(cart, totalAmount);
+
 
 			// Показываем сообщение об успехе
 			alert(`Заказ оформлен! Сумма: ${totalAmount} грн\nСпасибо за покупку!`);
@@ -267,12 +268,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 	// =======================================
-	// ДОБАВЛЯЕМ ПОСЛЕ ВСЕГО КОДА (В КОНЕЦ ФАЙЛА)
+	// ФУНКЦИЯ ОТПРАВКИ ДАННЫХ В FORMSPREE
 	// =======================================
-
-	// Функция отправки данных в Formspree
 	function sendOrderToFormspree(cart, totalAmount) {
-		// Создаем временную форму (не добавляем в DOM)
 		const formData = new FormData();
 
 		// Добавляем общие данные
@@ -306,29 +304,6 @@ window.addEventListener('DOMContentLoaded', () => {
 				console.error('❌ Ошибка отправки:', error);
 			});
 	}
-
-	// Модифицируем обработчик оформления заказа (ДОБАВЛЯЕМ ОДНУ СТРОЧКУ)
-	const originalCheckoutHandler = document.querySelector('.checkout-btn').onclick;
-	document.querySelector('.checkout-btn').onclick = function () {
-		const cart = JSON.parse(localStorage.getItem('cart')) || [];
-		const totalAmount = document.querySelector('.total-amount').textContent;
-
-		if (cart.length === 0) {
-			alert('Корзина пуста!');
-			return;
-		}
-
-		if (confirm(`Оформить заказ на сумму ${totalAmount} грн?`)) {
-			// ДОБАВЛЯЕМ ЭТУ СТРОЧКУ ДЛЯ ОТПРАВКИ
-			sendOrderToFormspree(cart, totalAmount);
-
-			console.log('✅ Заказ оформлен:', cart);
-			alert(`Заказ оформлен! Сумма: ${totalAmount} грн\nСпасибо за покупку!`);
-
-			localStorage.removeItem('cart');
-			loadCart();
-		}
-	};
 
 
 });
