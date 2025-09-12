@@ -1,60 +1,163 @@
 "use strict";
 
-"use strict";
+
 
 window.addEventListener('DOMContentLoaded', () => {
 
+
+
+
 	// =======================================
-	// ФУНКЦИЯ ОТПРАВКИ ЗАКАЗА В FORMSPREE
+	// ФУНКЦИЯ ЗАГРУЗКИ И ОТОБРАЖЕНИЯ КОРЗИНЫ
 	// =======================================
-	function sendOrderToFormspree(cart, totalAmount) {
-		console.log('📤 Отправка заказа в Formspree...');
+	function loadCart() {
+		console.log('🛒 Загрузка корзины...');
 
-		const formData = new FormData();
+		// Получаем элементы DOM
+		const cart = JSON.parse(localStorage.getItem('cart')) || [];
+		const cartContainer = document.querySelector('.cart-items');
+		const emptyCart = document.querySelector('.cart-empty');
+		const totalAmount = document.querySelector('.total-amount');
+		const checkoutBtn = document.querySelector('.checkout-btn');
 
-		// Добавляем общую информацию о заказе
-		formData.append('Сумма заказа', totalAmount + ' грн');
-		formData.append('Дата заказа', new Date().toLocaleString('ru-RU'));
-		formData.append('Количество товаров', cart.length + ' шт.');
-		formData.append('Общая сумма', totalAmount + ' грн');
+		// Очищаем контейнер товаров
+		cartContainer.innerHTML = '';
 
-		// Добавляем информацию о каждом товаре
+		// Проверяем пустая ли корзина
+		if (cart.length === 0) {
+			emptyCart.style.display = 'block';
+			totalAmount.textContent = '0';
+			checkoutBtn.disabled = true;
+			checkoutBtn.style.opacity = '0.5';
+			console.log('📭 Корзина пуста');
+			return;
+		}
+
+		// Корзина не пуста - скрываем сообщение
+		emptyCart.style.display = 'none';
+		checkoutBtn.disabled = false;
+		checkoutBtn.style.opacity = '1';
+
+		let total = 0;
+
+		// Создаем и добавляем каждый товар в корзину
 		cart.forEach((item, index) => {
-			const itemTotal = (item.price * item.quantity).toFixed(2);
+			// Преобразуем цену в число и вычисляем сумму за товар
+			const price = parseFloat(item.price) || 0;
+			const itemTotal = price * item.quantity;
+			total += itemTotal;
 
-			formData.append(`Товар ${index + 1} - Название`, item.name || 'Без названия');
-			formData.append(`Товар ${index + 1} - Цена за шт.`, item.price + ' грн');
-			formData.append(`Товар ${index + 1} - Количество`, item.quantity + ' шт.');
-			formData.append(`Товар ${index + 1} - Сумма`, itemTotal + ' грн');
-			formData.append(`Товар ${index + 1} - Изображение`, item.img || 'Нет изображения');
+			// Создаем HTML для товара в корзине с НОВОЙ СТРУКТУРОЙ
+			const cartItem = document.createElement('div');
+			cartItem.classList.add('cart-item');
+			cartItem.dataset.index = index;
+			cartItem.innerHTML = `
+            <div class="cart-item-info">
+                <div class="cart-item-image">
+                    <img src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">
+                </div>
+                <h3>${item.name}</h3>
+                <p class="item-price">Цена: ${price} грн</p>
+                <div class="cart-item-controls">
+                    <button class="quantity-btn minus" data-action="minus">-</button>
+                    <span class="quantity">${item.quantity}</span>
+                    <button class="quantity-btn plus" data-action="plus">+</button>
+                    <p class="item-total">Сумма: ${itemTotal.toFixed(2)} грн</p>
+                    <button class="remove-btn" data-action="remove">Удалить</button>
+                </div>
+            </div>
+        `;
+
+			cartContainer.appendChild(cartItem);
 		});
 
-		// Отправляем на Formspree
-		fetch('https://formspree.io/f/xpwjbozp', {
-			method: 'POST',
-			body: formData,
-			headers: {
-				'Accept': 'application/json'
-			}
-		})
-			.then(response => {
-				if (response.ok) {
-					return response.json();
-				}
-				throw new Error('Ошибка сети при отправке заказа');
-			})
-			.then(data => {
-				console.log('✅ Заказ успешно отправлен в Formspree:', data);
-				showNotification('Заказ успешно оформлен! Мы свяжемся с вами в ближайшее время.');
-			})
-			.catch(error => {
-				console.error('❌ Ошибка отправки заказа:', error);
-				showNotification('Произошла ошибка при отправке заказа. Пожалуйста, попробуйте еще раз.', 'error');
-			});
+		// Обновляем общую сумму с округлением до 2 знаков
+		totalAmount.textContent = total.toFixed(2);
+		console.log(`💰 Общая сумма: ${total.toFixed(2)} грн`);
 	}
 
 	// =======================================
-	// ОБНОВЛЕННЫЙ ОБРАБОТЧИК КНОПКИ ОФОРМЛЕНИЯ ЗАКАЗА
+	// ФУНКЦИЯ ОБНОВЛЕНИЯ КОЛИЧЕСТВА ТОВАРА
+	// =======================================
+	function updateQuantity(index, change) {
+		console.log(`🔄 Изменение количества товара ${index} на ${change}`);
+
+		const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+		// Проверяем существует ли товар с таким индексом
+		if (cart[index]) {
+			// Изменяем количество
+			cart[index].quantity += change;
+
+			// Если количество стало 0 или меньше - удаляем товар
+			if (cart[index].quantity <= 0) {
+				console.log(`🗑️ Удаление товара: ${cart[index].name}`);
+				cart.splice(index, 1);
+			}
+
+			// Сохраняем обновленную корзину в localStorage
+			localStorage.setItem('cart', JSON.stringify(cart));
+
+			// Перезагружаем корзину для отображения изменений
+			loadCart();
+		}
+	}
+
+	// =======================================
+	// ФУНКЦИЯ УДАЛЕНИЯ ТОВАРА ИЗ КОРЗИНЫ
+	// =======================================
+	function removeItem(index) {
+		console.log(`🗑️ Запрос на удаление товара с индексом ${index}`);
+
+		const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+		if (cart[index]) {
+			console.log(`✅ Удаление: ${cart[index].name}`);
+
+			// Удаляем товар из массива
+			cart.splice(index, 1);
+
+			// Сохраняем обновленный массив
+			localStorage.setItem('cart', JSON.stringify(cart));
+
+			// Обновляем отображение корзины
+			loadCart();
+
+			// Показываем уведомление
+			showNotification('Товар удален из корзины');
+		}
+	}
+
+	// =======================================
+	// ДЕЛЕГИРОВАНИЕ СОБЫТИЙ - ОБРАБОТЧИК НА КОНТЕЙНЕРЕ КОРЗИНЫ
+	// =======================================
+	document.querySelector('.cart__container').addEventListener('click', function (e) {
+		// Находим ближайший элемент товара
+		const cartItem = e.target.closest('.cart-item');
+		if (!cartItem) return;
+
+		// Получаем индекс товара из data-атрибута
+		const index = parseInt(cartItem.dataset.index);
+
+		// Обрабатываем кнопки с data-action
+		if (e.target.dataset.action === 'plus') {
+			// Увеличиваем количество на 1
+			updateQuantity(index, 1);
+		}
+		else if (e.target.dataset.action === 'minus') {
+			// Уменьшаем количество на 1
+			updateQuantity(index, -1);
+		}
+		else if (e.target.dataset.action === 'remove') {
+			// Полностью удаляем товар
+			if (confirm('Удалить этот товар из корзины?')) {
+				removeItem(index);
+			}
+		}
+	});
+
+	// =======================================
+	// ОБРАБОТЧИК КНОПКИ ОФОРМЛЕНИЯ ЗАКАЗА
 	// =======================================
 	document.querySelector('.checkout-btn').addEventListener('click', function () {
 		const cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -67,11 +170,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 		// Подтверждение оформления заказа
 		if (confirm(`Оформить заказ на сумму ${totalAmount} грн?`)) {
-			// Отправляем заказ в Formspree
-			sendOrderToFormspree(cart, totalAmount);
-
+			// Здесь будет логика отправки заказа на сервер
 			console.log('✅ Заказ оформлен:', cart);
-			showNotification('Заказ оформлен! Ожидайте подтверждения.');
+
+			// Показываем сообщение об успехе
+			alert(`Заказ оформлен! Сумма: ${totalAmount} грн\nСпасибо за покупку!`);
 
 			// Очищаем корзину после оформления
 			localStorage.removeItem('cart');
@@ -82,154 +185,150 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// =======================================
-	// ОБРАБОТЧИК КНОПКИ ОЧИСТКИ КОРЗИНЫ
+	// ФУНКЦИЯ ПОКАЗА УВЕДОМЛЕНИЙ
 	// =======================================
-	document.querySelector('.clear-corzina').addEventListener('click', function () {
+	function showNotification(message, type = 'success') {
+		// Создаем элемент уведомления
+		const notification = document.createElement('div');
+		notification.textContent = message;
+		notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 5px;
+        z-index: 1000;
+        font-family: Arial, sans-serif;
+    `;
+
+		// Добавляем на страницу
+		document.body.appendChild(notification);
+
+		// Удаляем через 5 секунда
+		setTimeout(() => {
+			notification.remove();
+		}, 5000);
+	}
+
+	// =======================================
+	// ИНИЦИАЛИЗАЦИЯ КОРЗИНЫ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+	// =======================================
+	console.log('🚀 Страница корзины загружена');
+	loadCart();
+
+	// Добавляем стиль для disabled кнопки
+	const style = document.createElement('style');
+	style.textContent = `
+    .checkout-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    .cart-item {
+        transition: all 0.3s ease;
+    }
+    .cart-item-removing {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+`;
+	document.head.appendChild(style);
+
+	// =======================================
+	// ДЕБАГ ФУНКЦИИ ДЛЯ ОТЛАДКИ
+	// =======================================
+	window.debugCart = {
+		loadCart,
+		updateQuantity,
+		removeItem,
+		clearCart: function () {
+			localStorage.removeItem('cart');
+			loadCart();
+			console.log('🧹 Корзина очищена');
+		}
+	};
+
+
+	// ..................   ПОЛНАЯ ОЧИСТКА КОРЗИНЫ ЧЕРЕЗ КНОПКУ  .......................................
+
+
+
+	document.querySelector('.clear-corzina').addEventListener('click', () => {
+		if (confirm('Вы уверены, что хотите очистить корзину?')) {
+			localStorage.removeItem('cart');
+			loadCart(); // Обновляем отображение
+			alert('Корзина очищена!');
+		}
+	});
+
+
+	// ................................    отправка формы из корзины ..................
+
+
+	// =======================================
+	// ДОБАВЛЯЕМ ПОСЛЕ ВСЕГО КОДА (В КОНЕЦ ФАЙЛА)
+	// =======================================
+
+	// Функция отправки данных в Formspree
+	function sendOrderToFormspree(cart, totalAmount) {
+		// Создаем временную форму (не добавляем в DOM)
+		const formData = new FormData();
+
+		// Добавляем общие данные
+		formData.append('total_amount', totalAmount + ' грн');
+		formData.append('order_date', new Date().toLocaleString('ru-RU'));
+		formData.append('items_count', cart.length + ' шт.');
+
+		// Добавляем данные каждого товара
+		cart.forEach((item, index) => {
+			const itemTotal = (item.price * item.quantity).toFixed(2);
+
+			formData.append(`product_${index + 1}_name`, item.name || 'Без названия');
+			formData.append(`product_${index + 1}_price`, item.price + ' грн');
+			formData.append(`product_${index + 1}_quantity`, item.quantity + ' шт.');
+			formData.append(`product_${index + 1}_total`, itemTotal + ' грн');
+		});
+
+		// Отправляем данные
+		fetch('https://formspree.io/f/xpwjbozp', {
+			method: 'POST',
+			body: formData,
+			headers: {
+				'Accept': 'application/json'
+			}
+		})
+			.then(response => response.json())
+			.then(data => {
+				console.log('✅ Данные отправлены в Formspree');
+			})
+			.catch(error => {
+				console.error('❌ Ошибка отправки:', error);
+			});
+	}
+
+	// Модифицируем обработчик оформления заказа (ДОБАВЛЯЕМ ОДНУ СТРОЧКУ)
+	const originalCheckoutHandler = document.querySelector('.checkout-btn').onclick;
+	document.querySelector('.checkout-btn').onclick = function () {
 		const cart = JSON.parse(localStorage.getItem('cart')) || [];
+		const totalAmount = document.querySelector('.total-amount').textContent;
 
 		if (cart.length === 0) {
-			alert('Корзина уже пуста!');
+			alert('Корзина пуста!');
 			return;
 		}
 
-		if (confirm('Вы уверены, что хотите полностью очистить корзину?')) {
+		if (confirm(`Оформить заказ на сумму ${totalAmount} грн?`)) {
+			// ДОБАВЛЯЕМ ЭТУ СТРОЧКУ ДЛЯ ОТПРАВКИ
+			sendOrderToFormspree(cart, totalAmount);
+
+			console.log('✅ Заказ оформлен:', cart);
+			alert(`Заказ оформлен! Сумма: ${totalAmount} грн\nСпасибо за покупку!`);
+
 			localStorage.removeItem('cart');
 			loadCart();
-			showNotification('Корзина очищена!');
 		}
-	});
-
-	// Остальной ваш код остается без изменений...
-	// [Здесь остается весь ваш оригинальный код: loadCart, updateQuantity, removeItem, showNotification и т.д.]
-
-});
+	};
 
 
-// Почему именно на родительский блок:
-// ✅ Более эффективно - обрабатывает события только в пределах корзины
-// ✅ Безопаснее - не ловит клики по другим элементам страницы
-// ✅ Производительнее - меньше проверок в обработчике
-// ✅ Логичнее - события корзины обрабатываются в контейнере корзины
-
-
-// Как работает текущее решение:
-// Один обработчик на контейнер корзины
-// Проверка: e.target.closest('.cart-item') - находим товар по которому кликнули
-// Проверка: e.target.dataset.action - определяем какое действие нужно выполнить
-// Действие: вызываем соответствующую функцию
-
-// Преимущества такого подхода:
-// Работает с динамическими элементами - новые товары автоматически обрабатываются
-// Экономит память - один обработчик вместо многих
-// Легко поддерживать - вся логика в одном месте
-// Автоматически удаляется при удалении контейнера
-
-
-//    отправка формы не вирт сервер
-
-// Что было добавлено:
-// Функция sendOrderToFormspree() - отправляет данные корзины на ваш Formspree endpoint
-// Обновленный обработчик кнопки оформления заказа - теперь вызывает функцию отправки
-// Обработчик кнопки очистки корзины - с подтверждением и уведомлением
-
-// Особенности реализации:
-// ✅ Данные отправляются в удобном формате для чтения
-// ✅ Включает всю информацию о товарах(название, цена, количество, сумма)
-// ✅ Добавлена обработка ошибок
-// ✅ Сообщения об успешной / неуспешной отправке
-// ✅ Совместимо с вашей существующей структурой данных
-
-
-
-// ..................   ПОЛНАЯ ОЧИСТКА КОРЗИНЫ ЧЕРЕЗ КНОПКУ  .......................................
-
-
-
-document.querySelector('.clear-corzina').addEventListener('click', () => {
-	if (confirm('Вы уверены, что хотите очистить корзину?')) {
-		localStorage.removeItem('cart');
-		loadCart(); // Обновляем отображение
-		alert('Корзина очищена!');
-	}
-});
-
-
-// ................................    отправка формы из корзины ..................
-
-
-// =======================================
-// ФУНКЦИЯ ОТПРАВКИ ДАННЫХ КОРЗИНЫ
-// =======================================
-function sendCartData() {
-	const cartItems = document.querySelectorAll('.cart-item');
-	const form = document.getElementById('cartForm');
-
-	// Очищаем форму от предыдущих данных
-	const existingInputs = form.querySelectorAll('[name^="product_"]');
-	existingInputs.forEach(input => input.remove());
-
-	// Добавляем общие данные
-	document.getElementById('formTotal').value = document.querySelector('.total-amount').textContent + ' грн';
-	document.getElementById('formCount').value = cartItems.length + ' шт.';
-
-	// Добавляем данные каждого товара
-	cartItems.forEach((item, index) => {
-		const name = item.querySelector('h3')?.textContent || 'Без названия';
-		const price = item.querySelector('.item-price')?.textContent.replace('Цена: ', '') || '0 грн';
-		const quantity = item.querySelector('.quantity')?.textContent || '1';
-		const total = item.querySelector('.item-total')?.textContent.replace('Сумма: ', '') || '0 грн';
-
-		// Создаем скрытые поля для каждого товара
-		createHiddenInput(form, `product_${index}_name`, name);
-		createHiddenInput(form, `product_${index}_price`, price);
-		createHiddenInput(form, `product_${index}_quantity`, quantity);
-		createHiddenInput(form, `product_${index}_total`, total);
-	});
-
-	// Отправляем форму
-	fetch(form.action, {
-		method: 'POST',
-		body: new FormData(form),
-		headers: {
-			'Accept': 'application/json'
-		}
-	})
-		.then(response => response.json())
-		.then(data => {
-			console.log('✅ Данные корзины отправлены:', data);
-			alert('Заказ оформлен! Данные отправлены.');
-		})
-		.catch(error => {
-			console.error('❌ Ошибка отправки:', error);
-			alert('Ошибка отправки заказа. Попробуйте еще раз.');
-		});
-}
-
-// Вспомогательная функция для создания скрытых полей
-function createHiddenInput(form, name, value) {
-	const input = document.createElement('input');
-	input.type = 'hidden';
-	input.name = name;
-	input.value = value;
-	form.appendChild(input);
-}
-
-// =======================================
-// ОБРАБОТЧИК КНОПКИ ОФОРМЛЕНИЯ ЗАКАЗА
-// =======================================
-document.querySelector('.checkout-btn').addEventListener('click', function () {
-	const cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-	if (cart.length === 0) {
-		alert('Корзина пуста!');
-		return;
-	}
-
-	if (confirm(`Оформить заказ на сумму ${document.querySelector('.total-amount').textContent} грн?`)) {
-		sendCartData(); // Отправляем данные корзины
-
-		// Очищаем корзину после отправки
-		localStorage.removeItem('cart');
-		loadCart();
-	}
 });
