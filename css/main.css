@@ -15,7 +15,6 @@
 }
 
 .item--name,
-.item--prize,
 .item--foto,
 .item--about,
 .item--availability {
@@ -26,6 +25,28 @@
   -webkit-box-pack: center;
       -ms-flex-pack: center;
           justify-content: center;
+}
+
+.item--prize {
+  position: relative;
+  width: 25%;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+}
+.item--prize div {
+  position: absolute;
+  top: 100%;
+  text-align: center;
+  border: 1px solid white;
+  padding: 0.625rem;
+  display: none;
+}
+.item--prize div p {
+  font-size: 1.25rem;
 }
 
 .item--card {

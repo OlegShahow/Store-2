@@ -128,6 +128,13 @@ window.addEventListener('DOMContentLoaded', () => {
 				block.style.display = "flex"; // или "block"
 			});
 
+
+			// ДОБАВЛЕНО: показать блоки с затратами
+			document.querySelectorAll(".cost").forEach(costBlock => {
+				costBlock.style.display = "block";
+			});
+
+
 			formBlockBody.style.display = "block";
 			alert("Режим администратора включён");
 			passwordInput.value = ""; // очистим поле
@@ -143,6 +150,12 @@ window.addEventListener('DOMContentLoaded', () => {
 		document.querySelectorAll(".info--admin").forEach(block => {
 			block.style.display = "none";
 		});
+
+		// ДОБАВЛЕНО: скрыть блоки с затратами
+		document.querySelectorAll(".cost").forEach(costBlock => {
+			costBlock.style.display = "none";
+		});
+
 
 		formBlockBody.style.display = "none";
 		alert("Режим администратора выключен");

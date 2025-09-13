@@ -60,6 +60,8 @@ async function addCard(cardData) {
 		formData.append('price', cardData.price);
 		formData.append('description', cardData.description || '');
 		formData.append('availability', cardData.availability || 'В наличии');
+		// ДОБАВЛЕНО: отправка данных о затратах
+		formData.append('cost', cardData.cost || '');
 
 		if (cardData.photoFile) {
 			formData.append('photo', cardData.photoFile);
@@ -156,7 +158,11 @@ function renderCard(card) {
     <div class="item--info">
         <div class="info--public">
             <div class="item--name adds"><p>${card.name}</p></div>
-            <div class="item--prize adds"><p>${card.price} <img src="./icon/g1.png" alt="@"></p></div>
+            <div class="item--prize adds">
+                <p>${card.price} <img src="./icon/g1.png" alt="@"></p>
+                <!-- ДОБАВЛЕНО: блок с затратами -->
+                <div class="cost"><p>Затраты ${card.cost || ''}</p></div>
+            </div>
             <div class="item--foto adds"><img src="${card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
             <div class="item--about adds">
                 <button class="ab">О товаре</button>
@@ -274,6 +280,7 @@ form.addEventListener("submit", async (event) => {
 		const price = form.price.value.trim();
 		const desc = form.desc.value.trim();
 		const availability = form.availability.value.trim() || "В наличии";
+		const cost = form.cost ? form.cost.value.trim() : ''; // ДОБАВЛЕНО: получение затрат
 		const file = form.photo.files[0];
 
 		if (!name || !price) {
@@ -291,6 +298,7 @@ form.addEventListener("submit", async (event) => {
 			price,
 			description: desc,
 			availability,
+			cost, // ДОБАВЛЕНО: передача затрат
 			photoFile: file
 		});
 

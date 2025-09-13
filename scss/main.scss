@@ -17,7 +17,6 @@
 }
 
 .item--name,
-.item--prize,
 .item--foto,
 .item--about,
 .item--availability {
@@ -25,6 +24,27 @@
 	display: flex;
 	justify-content: center;
 	// border: 1px solid white;
+}
+
+.item--prize {
+	position: relative;
+	width: 25%;
+	display: flex;
+	justify-content: center;
+
+& div{
+	position: absolute;
+	top: 100%;
+	text-align: center;
+	border: 1px solid white;
+	padding: toRem(10);
+	display: none;
+
+	& p{
+		font-size: toRem(20);
+	}
+}
+
 }
 
 .item--card {
@@ -177,16 +197,15 @@
 		box-shadow: 0px 0px 16px gold inset;
 	}
 }
-.korz--btn{
-width: toRem(50);
-background-color: rgba(255, 255, 255, 0);
-& img{
-	width: 100%;
+.korz--btn {
+	width: toRem(50);
+	background-color: rgba(255, 255, 255, 0);
+	& img {
+		width: 100%;
+	}
 }
-}
-.admin--date{
-
-	& p{
+.admin--date {
+	& p {
 		font-size: toRem(22);
 		text-shadow: 0px 0px 16px blue;
 		color: white;

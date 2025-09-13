@@ -62,6 +62,7 @@
 }
 
 #price,
+#cost,
 #availability {
   width: 6.25rem;
 }
