@@ -15,6 +15,7 @@ const PORT = process.env.PORT || 3000;
 const cardSchema = new mongoose.Schema({
 	name: { type: String, required: true },
 	price: { type: String, required: true },
+	cost: { type: String }, // ← ДОБАВЛЕНО: поле затрат
 	description: String,
 	availability: { type: String, default: 'В наличии' },
 	imgSrc: String,
@@ -43,7 +44,7 @@ const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
 	params: {
 		folder: "my-online-store",
-		allowed_formats: ["jpg", "jpeg", "png", "gif"],
+		allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"], // ← ДОБАВЛЕНО: webp формат
 		transformation: [{ width: 800, height: 600, crop: "limit" }]
 	},
 });
@@ -126,7 +127,7 @@ app.post("/api/cards", upload.single('photo'), async (req, res) => {
 	console.log("📦 Получен запрос на добавление карточки в MongoDB");
 
 	try {
-		const { name, price, description, availability } = req.body;
+		const { name, price, cost, description, availability } = req.body; // ← ДОБАВЛЕНО: cost
 
 		if (!name || !price) {
 			return res.status(400).json({ error: "Название и цена обязательны" });
@@ -143,6 +144,7 @@ app.post("/api/cards", upload.single('photo'), async (req, res) => {
 		const newCard = new Card({
 			name: name.toString().trim(),
 			price: price.toString().trim(),
+			cost: (cost || '').toString().trim(), // ← ДОБАВЛЕНО: поле затрат
 			description: (description || '').toString().trim(),
 			availability: (availability || 'В наличии').toString().trim(),
 			imgSrc: imageUrl
@@ -185,7 +187,7 @@ app.delete("/api/cards/:id", async (req, res) => {
 // Обновление карточки
 app.put("/api/cards/:id", async (req, res) => {
 	const { id } = req.params;
-	const { name, price, description, availability } = req.body;
+	const { name, price, cost, description, availability } = req.body; // ← ДОБАВЛЕНО: cost
 
 	try {
 		if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -197,6 +199,7 @@ app.put("/api/cards/:id", async (req, res) => {
 			{
 				name,
 				price,
+				cost, // ← ДОБАВЛЕНО: поле затрат
 				description,
 				availability,
 				updatedAt: new Date()
