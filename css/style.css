@@ -121,24 +121,24 @@ h6 {
 }
 
 body {
-  background-color: rgb(85, 107, 47);
-  background-image: url("https://www.transparenttextures.com/patterns/basketball.png");
-  padding: 3.125rem 0;
+  background-color: #e6f0fa;
+  background-image: url("https://www.transparenttextures.com/patterns/dark-leather.png");
+  padding: 12.5rem 0;
+  top: 0;
+  left: 0;
+  background-attachment: fixed;
 }
 
-.olx {
-  margin: 6.25rem 0;
-}
 .olx__container {
   text-align: center;
 }
 .olx__container h1 {
-  color: white;
+  color: #333333;
   font-size: 4.375rem;
   font-family: "MyCustomFont";
 }
 .olx__container span {
-  color: gold;
+  color: #514f4f;
   font-family: "My";
 }
 

@@ -25,24 +25,19 @@ window.addEventListener('DOMContentLoaded', () => {
 	const description = document.querySelectorAll(".description");
 
 	abouts.forEach((btn, index) => {
-		btn.addEventListener("click", () => {
+		btn.addEventListener("mouseenter", () => {
 			// переключаем видимость блока description с тем же индексом
-			description[index].style.display = description[index].style.display === "flex" ? "none" : "flex";
+			description[index].style.display = "flex";
+		});
+	});
+	abouts.forEach((btn, index) => {
+		btn.addEventListener("mouseleave", () => {
+			// переключаем видимость блока description с тем же индексом
+			description[index].style.display = "none";
 		});
 	});
 
-
-
-	// Как можно красиво сделать через target:
-	// Можно найти ближайший.description относительно нажатой кнопки:
-
-	// abouts.forEach((btn) => {
-	// 	btn.addEventListener("click", (e) => {
-	// 		const desc = e.target.closest(".item--about").querySelector(".description");
-	// 		desc.style.display = desc.style.display === "flex" ? "none" : "flex";
-	// 	});
-	// });
-
+	
 	// .............................................................................................................
 
 

@@ -20,8 +20,8 @@
 
 	& h2 {
 		font-family: "My3";
-		letter-spacing:5px;
-		color: white;
+		letter-spacing: 5px;
+		color: #333333;
 		font-size: toRem(50);
 	}
 	&__admin {
@@ -40,7 +40,8 @@
 		}
 
 		& label {
-			color: white;
+			color:  #333333;
+			text-shadow: 0px 0px 6px white;
 			font-size: toRem(24);
 		}
 		& input,
@@ -62,8 +63,12 @@
 }
 .adnbtn {
 	padding: toRem(10);
-	font-size: toRem(18);
+	font-size: toRem(20);
 	margin-top: toRem(20);
+	box-shadow: 0px 0px 6px greenyellow;
+	&:hover{
+			box-shadow: 0px 0px 6px greenyellow inset;
+	}
 }
 #price,
 #cost,
@@ -76,7 +81,7 @@
 .change--password {
 	width: 100%;
 	height: auto;
-	padding:  toRem(50) 0;
+	padding: toRem(50) 0;
 	margin-top: toRem(50);
 	border-top: 1px solid red;
 	border-bottom: 1px solid red;

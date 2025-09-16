@@ -156,29 +156,39 @@ function renderCard(card) {
 	// ДОБАВЛЕНО: data-атрибуты для передачи данных в корзину
 	newCard.innerHTML = `
     <div class="item--info">
+	    <div class="description">
+		   <p>${card.description || ""}</p>
+		</div>
         <div class="info--public">
+		 <div class="item--foto adds">
+		    <img src="${card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'">
+		 </div>
             <div class="item--name adds"><p>${card.name}</p></div>
-            <div class="item--prize adds">
-                <p>${card.price} <img src="./icon/g1.png" alt="@"></p>
-                <!-- ДОБАВЛЕНО: блок с затратами -->
-                <div class="cost"><p>Затраты ${card.cost || ''}</p></div>
-            </div>
-            <div class="item--foto adds"><img src="${card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'"></div>
-            <div class="item--about adds">
-                <button class="ab">О товаре</button>
-                <div class="description"><p>${card.description || ""}</p></div>
-            </div>
-            <div class="item--availability adds">${card.availability}</div>
-            <div class="item--korzina">
-                <!-- ИЗМЕНЕНО: убрана ссылка, добавлены data-атрибуты -->
-                <button type="button" class="korz--btn" 
-                        data-id="${cardId}" 
-                        data-name="${card.name}" 
-                        data-price="${card.price}" 
-                        data-img="${card.imgSrc}">
-                    <img src="./icon/k2.png" alt="Корзина">
-                </button>
-            </div>
+
+			<div class="item--sbor">
+                 <div class="item--prize adds">
+                     <p>${card.price}</p> <img src="./icon/g1.png" alt="@">
+                     <!-- ДОБАВЛЕНО: блок с затратами -->
+                    <div class="cost"><p>Затраты ${card.cost || ''}</p></div>
+                 </div>
+           
+           
+                  <div class="item--availability adds">${card.availability}</div>
+                 <div class="item--korzina">
+                       <!-- ИЗМЕНЕНО: убрана ссылка, добавлены data-атрибуты -->
+                       <button type="button" class="korz--btn" 
+                           data-id="${cardId}" 
+                           data-name="${card.name}" 
+                           data-price="${card.price}" 
+                           data-img="${card.imgSrc}">
+                           <img src="./icon/k2.png" alt="Корзина">
+                         </button>
+                 </div>
+
+				       <div class="item--about adds">
+                           <button class="ab">О товаре</button>
+                      </div>
+			  </div>
         </div>
         <div class="info--admin">
             <div class="admin--delite"><button class="del">Удалить товар</button></div>

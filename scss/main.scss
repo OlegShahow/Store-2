@@ -16,11 +16,20 @@
 	}
 }
 
+// ///////////////////////////    ПЕРЕНЕСТИ ДЛЯ  main__cards   ////////////////////////////////////////////////////////////////////
+
+.main__cardsesys {
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+}
+// ////////////////////////////////////////////////////////////////////////////////////
+
 .item--name,
 .item--foto,
-.item--about,
-.item--availability {
-	width: 25%;
+.item--about {
 	display: flex;
 	justify-content: center;
 	// border: 1px solid white;
@@ -28,105 +37,88 @@
 
 .item--prize {
 	position: relative;
-	width: 25%;
 	display: flex;
 	justify-content: center;
 
-& div{
-	position: absolute;
-	top: 100%;
-	text-align: center;
-	border: 1px solid white;
-	padding: toRem(10);
-	display: none;
+	& div {
+		position: absolute;
+		top: 100%;
+		text-align: center;
+		border: 1px solid white;
+		padding: toRem(10);
+		display: none;
 
-	& p{
-		font-size: toRem(20);
+		& p {
+			font-size: toRem(20);
+		}
 	}
-}
-
 }
 
 .item--card {
 	width: 100%;
 	padding: toRem(20) 0;
-	position: relative; // нужно, чтобы псевдоэлемент позиционировался от .item--card
-	// transition: 1s ease-in-out;
-	// когда наводим на карточку (или на её содержимое), поднимаем её над соседями
-	&:hover {
-		background-color: rgba(255, 255, 255, 0.026);
-		z-index: 999;
-	}
-	&::before,
-	&::after {
-		content: "";
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 16px; // высота зоны для тени
-		pointer-events: none; // чтобы не перекрывала клики
-	}
-
-	&::before {
-		top: -15px; // тень сверху
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-	}
-
-	&::after {
-		bottom: -15px; // тень снизу
-		box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.3);
-	}
 
 	// border: 1px solid white;
 }
 .item--info {
-	width: 100%;
+	position: relative;
+	width: 30%;
+	padding: toRem(20);
 	display: flex;
 	flex-direction: column;
+
+	background-color: rgba(255, 255, 255, 0); /* Полупрозрачный белый фон */
+	backdrop-filter: blur(2px); /* Слегка размытый фон */
+	border: 1px solid #333333;
+	box-shadow: 0px 0px 16px #333333;
+	transition: box-shadow 0.2s ease-in-out;
+
+	&:hover {
+		box-shadow: 0px 0px 6px #333333;
+		// border: 1px solid white;
+	}
 }
 .info--public {
 	width: 100%;
 	display: flex;
-	padding: 0 toRem(20);
+	flex-direction: column;
+	row-gap: toRem(20);
 	align-items: center;
-	justify-content: space-around;
 }
 .item--name {
+	width: 100%;
 	& p {
-		font-size: toRem(38);
-		color: white;
+		font-size: toRem(28);
+		color: #333333;
 		letter-spacing: 1px;
-		text-shadow: 0px 0px 16px black;
+		font-weight: 900;
 	}
+}
+.item--sbor {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	// border: 1px solid white;
 }
 .item--prize {
 	& p {
-		font-size: toRem(38);
-		color: white;
+		font-size: toRem(28);
+		color: #333333;
 		letter-spacing: 1px;
-		text-shadow: 0px 0px 16px black;
+		font-weight: 900;
 	}
 	& img {
 		width: toRem(30);
-		background-color: rgb(247, 251, 247);
+		// background-color: rgb(247, 251, 247);
 		border-radius: 50%;
 	}
 }
 .item--foto {
-	width: toRem(150);
+	width: 100%;
 
 	& img {
-		width: 100%;
-		border-radius: toRem(20);
-		transition: 0.5s ease-in-out;
-		cursor: pointer;
-		position: relative; // чтобы z-index на img работал
-		z-index: 1; // поверх контента внутри карточки
-
-		&:hover {
-			transform: scale(3);
-			z-index: 2;
-		}
+		width: 50%;
 	}
 }
 .item--about {
@@ -136,26 +128,32 @@
 .description {
 	position: absolute;
 	display: none;
-	width: 200%;
-	height: auto;
-	top: toRem(70);
-	left: toRem(-60);
+	width: 100%;
+	height: 70%;
+	top: 0;
+	left: 0;
 	padding: toRem(10);
-	background-color: rgb(247, 251, 247);
-	text-align: center;
+	background-color: rgba(255, 255, 255, 0.303);
+	backdrop-filter: blur(30px);
+	align-items: center;
+	justify-content: center;
 	z-index: 999;
 
 	& p {
-		color: black;
-		background-color: white;
+		color: #333333;
+		text-shadow: 0px 0px 6px white;
+		padding: toRem(10);
+		// background-color: rgba(255, 255, 255, 0);
+		// backdrop-filter: blur(30px);
 		font-size: toRem(26);
+		text-align: center;
 	}
 }
 .item--availability {
-	font-size: toRem(38);
-	color: white;
+	font-size: toRem(28);
+	color: green;
 	letter-spacing: 1px;
-	text-shadow: 0px 0px 16px black;
+	font-weight: 900;
 }
 .info--admin {
 	margin-top: toRem(50);
@@ -188,22 +186,33 @@
 	font-size: toRem(28);
 	padding: toRem(10);
 	background-color: rgba(255, 255, 255, 0);
-	color: white;
-	box-shadow: 0px 0px 6px gold;
+	color: #333333;
+	box-shadow: 0px 0px 6px #333333;
 	border-radius: toRem(10);
 
 	&:hover {
 		// transform: scale(0.9);
-		box-shadow: 0px 0px 16px gold inset;
+		box-shadow: 0px 0px 16px #333333 inset;
 	}
+
+	// &:hover + .description{
+	// 	display: block;
+	// }
 }
 .korz--btn {
 	width: toRem(50);
+
 	background-color: rgba(255, 255, 255, 0);
 	& img {
 		width: 100%;
+		
+		&:hover {
+			transform: scale(1.2);
+		}
 	}
 }
+
+
 .admin--date {
 	& p {
 		font-size: toRem(22);

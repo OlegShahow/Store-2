@@ -38,8 +38,11 @@ $maxWidth: 1920;
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 body {
-	background-color: rgb(85, 107, 47);
-	background-image: url("https://www.transparenttextures.com/patterns/basketball.png");
+	background-color: #e6f0fa;
+	background-image: url("https://www.transparenttextures.com/patterns/45-degree-fabric-dark.png");
+	top: 0;
+	left: 0;
+	background-attachment: fixed;
 	padding: toRem(50) 0;
 	width: 100vw;
 	height: auto;
@@ -52,7 +55,7 @@ body {
 	& h1 {
 		font-family: "My3";
 		font-size: toRem(70);
-		color: white;
+		color: #333333;
 		letter-spacing: 6px;
 		margin: toRem(100) 0;
 	}
@@ -84,7 +87,7 @@ body {
 .cart-total {
 	& p {
 		font-size: toRem(30);
-		color: white;
+		color: #333333;
 		margin: toRem(30) 0;
 	}
 }
@@ -97,14 +100,14 @@ body {
 	justify-content: space-between;
 	& h3 {
 		font-size: toRem(40);
-		color: white;
+		color: #333333;
 		letter-spacing: 6px;
 		margin: toRem(10) 0;
 	}
 }
 .item-price {
 	font-size: toRem(40);
-	color: white;
+	color: #333333;
 }
 
 .cart-item-controls {
@@ -121,7 +124,7 @@ body {
 
 .cart-item-controls span {
 	font-size: toRem(30);
-	color: white;
+	color: #333333;
 	margin: 0 toRem(40);
 }
 
@@ -153,13 +156,13 @@ body {
 }
 .item-total {
 	font-size: toRem(30);
-	color: white;
+	color: #333333;
 	margin: 0 toRem(30);
 }
 button + .clear-corzina {
 	margin-top: toRem(100);
 	background-color: rgba(255, 255, 255, 0);
-	color: white;
+	color: #333333;
 	font-size: toRem(30);
 	box-shadow: 0px 0px 36px red inset;
 

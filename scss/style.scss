@@ -59,26 +59,27 @@ $maxWidth: 1920;
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 body {
-	background-color: rgb(85, 107, 47);
-	background-image: url("https://www.transparenttextures.com/patterns/basketball.png");
-	padding: toRem(50) 0;
-	// width: 100vw;
-	// height: 100vh;
+	background-color: #e6f0fa;
+	background-image: url("https://www.transparenttextures.com/patterns/dark-leather.png");
+	padding: toRem(200) 0;
+	top: 0;
+	left: 0;
+	background-attachment: fixed;
 }
 
 .olx {
-	margin: toRem(100) 0;
+	// margin: toRem(100) 0;
 	&__container {
 		text-align: center;
-
+	
 		& h1 {
-			color: white;
+			color: #333333;
 			font-size: toRem(70);
 			font-family: "MyCustomFont";
 		}
 
 		& span {
-			color: gold;
+			color: #514f4f;
 			font-family: "My";
 		}
 	}

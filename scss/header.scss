@@ -4,10 +4,19 @@
 }
 
 .header {
-	// border: 1px solid white;
+	border: 1px solid #b9cce5;
 	width: 100vw;
 	height: auto;
 	padding: toRem(10) toRem(50);
+	background-color: #e6f0fa;
+	background-image: url("https://www.transparenttextures.com/patterns/broken-noise.png");
+	top: toRem(20);
+	left: 0;
+	position: fixed;
+	z-index: 10000;
+	// background-color: #e6f0fa;
+	// background-image: url("https://www.transparenttextures.com/patterns/buried.png");
+	/* This is mostly intended for prototyping; please download the pattern and re-host for production environments. Thank you! */
 
 	&__container {
 		display: flex;
@@ -24,15 +33,16 @@
 		display: flex;
 
 		& button {
-			width: toRem(150);
+			width: toRem(350);
 			height: toRem(50);
 			padding: toRem(10);
-
+			font-family: "My3";
+			letter-spacing: 2px;
 			clip-path: polygon(20% 0%, 100% 0%, 80% 100%, 0% 100%);
-			color: white;
-			font-size: toRem(24);
+			color: #333333;
+			font-size: toRem(28);
 			background-color: rgba(0, 128, 0, 0);
-			box-shadow: 0px 0px 12px gold inset;
+			box-shadow: 0px 0px 12px #333333 inset;
 			transition: 0.5s ease-in-out;
 
 			&:hover {
@@ -53,27 +63,27 @@
 			padding: toRem(10);
 			font-size: toRem(24);
 			background-color: rgba(0, 128, 0, 0);
-			color: white;
+			color: #333333;
 			border-radius: toRem(10);
 		}
 		& .enter {
 			margin: 0 toRem(20);
-			box-shadow: 0px 0px 12px gold inset;
+			box-shadow: 0px 0px 12px greenyellow;
 			&:hover {
-				box-shadow: 0px 0px 22px gold;
+				box-shadow: 0px 0px 6px greenyellow inset;
 			}
 		}
 
 		& .off--admin {
-			box-shadow: 0px 0px 22px rgb(233, 8, 8) inset;
+			box-shadow: 0px 0px 6px rgb(233, 8, 8);
 			border: 0px 0px solid red;
 			&:hover {
-				box-shadow: 0px 0px 42px rgb(233, 8, 8);
+				box-shadow: 0px 0px 6px rgb(233, 8, 8) inset;
 			}
 		}
 		& label {
 			font-size: toRem(24);
-			color: white;
+			color: #333333;
 		}
 		& input {
 			width: toRem(100);
@@ -88,15 +98,16 @@
 	&__nav--nav {
 		width: 100%;
 		display: flex;
-		// flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
-		color: white;
+		justify-content: space-around;
+		color: #333333;
 		font-size: toRem(24);
 
 		& a {
-			color: white;
+			color: #1a252f;
 			font-size: toRem(24);
+			font-weight: 900;
+			text-shadow: 0px 0px 6px white;
 		}
 	}
 }
@@ -143,6 +154,11 @@
 		padding: toRem(10);
 		display: none;
 		text-align: center;
+		color: white;
+
+		& p {
+			text-shadow: 0px 0px 6px black;
+		}
 	}
 }
 
@@ -179,20 +195,20 @@
 
 	& img {
 		width: toRem(35);
-animation: bl 1s ease-in-out infinite;
+		animation: bl 1s ease-in-out infinite;
 	}
 }
 @keyframes bl {
-	0%{
-transform: scale(1);
+	0% {
+		transform: scale(1);
 	}
-	10%{
+	10% {
 		transform: scale(1.1);
 	}
-	20%{
+	20% {
 		transform: scale(1.1);
 	}
-	100%{
+	100% {
 		transform: scale(1);
 	}
 }
