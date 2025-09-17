@@ -160,28 +160,28 @@ function renderCard(card) {
 		   <p>${card.description || ""}</p>
 		</div>
         <div class="info--public">
-		 <div class="item--foto adds">
-		    <img src="${card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'">
-		 </div>
+		   <div class="item--foto adds">
+		      <img src="${card.imgSrc}" alt="${card.name}" onerror="this.style.display='none'">
+		   </div>
             <div class="item--name adds"><p>${card.name}</p></div>
 
 			<div class="item--sbor">
 
 
-              <div class="item--trio">
+               <div class="item--trio">
 
-                 <div class="item--prize adds">
-                     <p>${card.price}</p> <img src="./icon/g1.png" alt="@">
-                     <!-- ДОБАВЛЕНО: блок с затратами -->
-                    <div class="cost"><p>Затраты ${card.cost || ''}</p></div>
-                 </div>
+                    <div class="item--prize adds">
+                          <p>${card.price}</p> <img src="./icon/g1.png" alt="@">
+                          <!-- ДОБАВЛЕНО: блок с затратами -->
+                         <div class="cost"><p>Затраты ${card.cost || ''}</p></div>
+                    </div>
            
            
-                  <div class="item--availability adds">${card.availability}</div>
+                    <div class="item--availability adds">${card.availability}</div>
 
-                      <div class="item--about adds">
+                        <div class="item--about adds">
                            <button class="ab">О товаре</button>
-                      </div>
+                        </div>
 
 		       </div>			  
 					  
@@ -195,10 +195,12 @@ function renderCard(card) {
                            <img src="./icon/k2.png" alt="Корзина">
                          </button>
                  </div>
-
-				    
+				   
 			  </div>
+			  
         </div>
+
+
         <div class="info--admin">
             <div class="admin--delite"><button class="del">Удалить товар</button></div>
             <div class="admin--status"><button class="stat">Статус</button></div>

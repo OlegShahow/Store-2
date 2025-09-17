@@ -34,6 +34,14 @@
 }
 // ////////////////////////////////////////////////////////////////////////////////////
 
+.item--sbor {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	row-gap: toRem(20);
+}
+
 .item--name,
 .item--foto,
 .item--about {
