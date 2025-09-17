@@ -8,6 +8,9 @@
 .main {
   margin-top: 3.125rem;
 }
+.main__container {
+  width: 100%;
+}
 .main__cards {
   width: 100%;
   height: auto;
@@ -27,6 +30,7 @@
   -ms-flex-wrap: wrap;
       flex-wrap: wrap;
   row-gap: 1.875rem;
+  border: 1px solid white;
 }
 
 .item--trio {
