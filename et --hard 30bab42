@@ -1,0 +1,57 @@
+[33m84ad665[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{0}: reset: moving to HEAD~1
+[33m30bab42[m HEAD@{1}: commit: 1
+[33m84ad665[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{2}: commit: 81
+[33m1e3ff63[m HEAD@{3}: commit: 80
+[33mabf6b97[m HEAD@{4}: commit: 7777
+[33mfa3e6a3[m HEAD@{5}: commit: 777
+[33m09c1a3a[m HEAD@{6}: commit: 77
+[33m9cbe973[m HEAD@{7}: commit: 76
+[33me6fa51f[m HEAD@{8}: commit: 73
+[33m27bf577[m HEAD@{9}: commit: 72
+[33m3fca5ba[m HEAD@{10}: commit: 71
+[33md665c14[m HEAD@{11}: commit: 70
+[33m3e544de[m HEAD@{12}: commit: 61
+[33m32496cb[m HEAD@{13}: commit: 60
+[33m8f6a9b1[m HEAD@{14}: commit: 56
+[33mee18425[m HEAD@{15}: commit: 51
+[33mc3db3ab[m HEAD@{16}: commit: 50
+[33mb89359d[m HEAD@{17}: commit: 40
+[33m6103052[m HEAD@{18}: commit: 35
+[33m9df5b6b[m HEAD@{19}: commit: 34
+[33m2c3880c[m HEAD@{20}: commit: 33
+[33m9259d75[m HEAD@{21}: commit: 31
+[33m738f85c[m HEAD@{22}: commit: 31
+[33mf0517c7[m HEAD@{23}: commit: 30
+[33m0eb5e75[m HEAD@{24}: commit: fix: downgrade express to stable version 4.18.2 and update dependencies
+[33m82acaf1[m HEAD@{25}: commit: 27
+[33m7c9906d[m HEAD@{26}: commit: 25
+[33m934e6ab[m HEAD@{27}: commit: 23
+[33m14e2be5[m HEAD@{28}: commit: 22
+[33m7e4b770[m HEAD@{29}: commit: 21
+[33mb57deae[m HEAD@{30}: commit: 22
+[33mb7ce9a6[m HEAD@{31}: commit: 21
+[33m0ad1c17[m HEAD@{32}: commit: 19
+[33mef78011[m HEAD@{33}: commit: 18
+[33me8c40df[m HEAD@{34}: commit: 16
+[33me914e95[m HEAD@{35}: commit: 15
+[33m6dd2b1a[m HEAD@{36}: commit: 14
+[33me196896[m HEAD@{37}: commit: 12
+[33m3f28e1f[m HEAD@{38}: commit: 777
+[33md64c3f8[m HEAD@{39}: commit: 7
+[33m50de163[m HEAD@{40}: commit: 6
+[33mcb3ad2b[m HEAD@{41}: commit: 5
+[33mac4208f[m HEAD@{42}: commit: 4
+[33mc1c0dde[m HEAD@{43}: commit: 3
+[33m5113002[m HEAD@{44}: commit: 2
+[33m2addc44[m HEAD@{45}: commit: 1
+[33m04466ff[m HEAD@{46}: commit: rend
+[33mcb08deb[m HEAD@{47}: commit: ok
+[33m71e8944[m HEAD@{48}: commit: final
+[33mb157a92[m HEAD@{49}: commit: финал
+[33m73bc94b[m HEAD@{50}: commit: работа с фото и отправка на облако картинки
+[33m0cf71a5[m HEAD@{51}: commit: + добавка фото из компа
+[33ma5494d4[m HEAD@{52}: commit: new izmen
+[33m805d1c2[m HEAD@{53}: commit: new
+[33m15a6f3c[m HEAD@{54}: commit: Initial commit
+[33m021513e[m HEAD@{55}: commit: готов к серверу
+[33m23b1543[m HEAD@{56}: commit (initial): start

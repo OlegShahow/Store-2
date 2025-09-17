@@ -166,6 +166,10 @@ function renderCard(card) {
             <div class="item--name adds"><p>${card.name}</p></div>
 
 			<div class="item--sbor">
+
+
+              <div class="item--trio">
+
                  <div class="item--prize adds">
                      <p>${card.price}</p> <img src="./icon/g1.png" alt="@">
                      <!-- ДОБАВЛЕНО: блок с затратами -->
@@ -174,6 +178,13 @@ function renderCard(card) {
            
            
                   <div class="item--availability adds">${card.availability}</div>
+
+                      <div class="item--about adds">
+                           <button class="ab">О товаре</button>
+                      </div>
+
+		       </div>			  
+					  
                  <div class="item--korzina">
                        <!-- ИЗМЕНЕНО: убрана ссылка, добавлены data-атрибуты -->
                        <button type="button" class="korz--btn" 
@@ -185,15 +196,13 @@ function renderCard(card) {
                          </button>
                  </div>
 
-				       <div class="item--about adds">
-                           <button class="ab">О товаре</button>
-                      </div>
+				    
 			  </div>
         </div>
         <div class="info--admin">
             <div class="admin--delite"><button class="del">Удалить товар</button></div>
             <div class="admin--status"><button class="stat">Статус</button></div>
-            <div class="admin--date"><p>Размещено - ${card.date}</p></div>
+            <div class="admin--date"><p>Размещено <br> ${card.date}</p></div>
         </div>
     </div>
     `;
@@ -225,7 +234,7 @@ function renderCard(card) {
 	const availabilityElement = newCard.querySelector(".item--availability");
 	statButton.addEventListener("click", async () => {
 		try {
-			const newStatus = card.availability === "В наличии" ? "Нет в наличии" : "В наличии";
+			const newStatus = card.availability === "В наличии" ? "В дороге" : "В наличии";
 			await updateCardStatus(cardId, newStatus);
 			availabilityElement.textContent = newStatus;
 			card.availability = newStatus;
@@ -397,7 +406,7 @@ function showCartNotification(message, type = 'success') {
 		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 		font-family: Arial, sans-serif;
-		font-size: 14px;
+		font-size: 18px;
 		opacity: 0;
 		transform: translateX(100%);
 		transition: all 0.3s ease;

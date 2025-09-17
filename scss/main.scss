@@ -18,10 +18,17 @@
 
 // ///////////////////////////    ПЕРЕНЕСТИ ДЛЯ  main__cards   ////////////////////////////////////////////////////////////////////
 
-.main__cardsesys {
+// .main__cardsesys {
+// 	width: 100%;
+// 	display: flex;
+// 	flex-wrap: wrap;
+// 	align-items: center;
+// 	justify-content: space-between;
+// }
+
+.item--trio {
 	width: 100%;
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 }
@@ -205,13 +212,12 @@
 	background-color: rgba(255, 255, 255, 0);
 	& img {
 		width: 100%;
-		
+
 		&:hover {
 			transform: scale(1.2);
 		}
 	}
 }
-
 
 .admin--date {
 	& p {
