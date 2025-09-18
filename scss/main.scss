@@ -20,7 +20,7 @@
 		width: 100%;
 		height: auto;
 		display: flex;
-			align-items: center;
+		align-items: center;
 		justify-content: space-between;
 		flex-wrap: wrap;
 		row-gap: toRem(30);
@@ -83,14 +83,14 @@
 }
 
 .item--card {
-	width: 100%;
+	width: 30%;
 	padding: toRem(20) 0;
 
 	// border: 1px solid white;
 }
 .item--info {
 	position: relative;
-	width: 30%;
+	width: 100%;
 	padding: toRem(20);
 	display: flex;
 	flex-direction: column;
