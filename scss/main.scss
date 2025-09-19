@@ -157,6 +157,7 @@
 	display: none;
 	width: 100%;
 	height: 70%;
+	overflow-y: auto; /* Включает вертикальный скролл, если содержимое выходит за пределы */
 	top: 0;
 	left: 0;
 	padding: toRem(10);
