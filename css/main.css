@@ -90,13 +90,13 @@
 }
 
 .item--card {
-  width: 100%;
+  width: 30%;
   padding: 1.25rem 0;
 }
 
 .item--info {
   position: relative;
-  width: 30%;
+  width: 100%;
   padding: 1.25rem;
   display: -webkit-box;
   display: -ms-flexbox;

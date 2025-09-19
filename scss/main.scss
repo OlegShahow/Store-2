@@ -138,7 +138,6 @@
 	}
 	& img {
 		width: toRem(30);
-		// background-color: rgb(247, 251, 247);
 		border-radius: 50%;
 	}
 }
@@ -171,8 +170,6 @@
 		color: #333333;
 		text-shadow: 0px 0px 6px white;
 		padding: toRem(10);
-		// background-color: rgba(255, 255, 255, 0);
-		// backdrop-filter: blur(30px);
 		font-size: toRem(26);
 		text-align: center;
 	}
@@ -219,13 +216,8 @@
 	border-radius: toRem(10);
 
 	&:hover {
-		// transform: scale(0.9);
 		box-shadow: 0px 0px 16px #333333 inset;
 	}
-
-	// &:hover + .description{
-	// 	display: block;
-	// }
 }
 .korz--btn {
 	width: toRem(50);
